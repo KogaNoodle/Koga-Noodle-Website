@@ -1,0 +1,237 @@
+---
+const links = [
+  { href: '/', label: 'Home' },
+  { href: '/about', label: 'About' },
+];
+const path = Astro.url.pathname.replace(/\/+$/, '') || '/';
+---
+
+<div class="menu" data-menu>
+  <button
+    class="menu-toggle frosted"
+    type="button"
+    aria-label="Toggle navigation menu"
+    aria-expanded="false"
+    aria-controls="menu-panel"
+    data-menu-toggle
+  >
+    <span class="menu-bars" aria-hidden="true">
+      <span></span>
+      <span></span>
+      <span></span>
+    </span>
+  </button>
+
+  <nav class="menu-panel frosted" id="menu-panel" aria-label="Primary" data-menu-panel>
+    <ul class="menu-list" role="list">
+      {
+        links.map((l) => (
+          <li>
+            <a
+              class="menu-link"
+              href={l.href}
+              aria-current={path === l.href ? 'page' : undefined}
+            >
+              {l.label}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </nav>
+
+  <div class="menu-backdrop" data-menu-backdrop aria-hidden="true"></div>
+</div>
+
+<style>
+  .menu {
+    position: fixed;
+    top: clamp(var(--space-4), 2.5vw, var(--space-8));
+    right: clamp(var(--space-4), 2.5vw, var(--space-8));
+    z-index: 100;
+  }
+
+  .menu-toggle {
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: transform 0.2s ease, border-color 0.2s ease;
+  }
+
+  .menu-toggle:hover,
+  .menu-toggle:focus-visible {
+    transform: translateY(-2px);
+    border-color: var(--c-cyan);
+  }
+
+  .menu-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    width: 20px;
+  }
+
+  .menu-bars span {
+    display: block;
+    height: 2px;
+    background: var(--ink);
+    border-radius: 2px;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+  }
+
+  /* Animate bars into an X when the menu is open. */
+  [data-menu-open] .menu-bars span:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+  }
+  [data-menu-open] .menu-bars span:nth-child(2) {
+    opacity: 0;
+  }
+  [data-menu-open] .menu-bars span:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
+  }
+
+  .menu-panel {
+    position: fixed;
+    top: calc(
+      clamp(var(--space-4), 2.5vw, var(--space-8)) + 48px + var(--space-2)
+    );
+    right: clamp(var(--space-4), 2.5vw, var(--space-8));
+    min-width: 180px;
+    padding: var(--space-4);
+    border-radius: var(--radius-lg);
+    opacity: 0;
+    transform: translateX(16px) scale(0.96);
+    transform-origin: top right;
+    pointer-events: none;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+  }
+
+  [data-menu-open] .menu-panel {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+    pointer-events: auto;
+  }
+
+  .menu-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .menu-link {
+    display: block;
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--radius-md);
+    font-family: var(--font-display);
+    font-size: var(--step--1);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    transition: color 0.2s ease, background 0.2s ease;
+  }
+
+  .menu-link:hover,
+  .menu-link:focus-visible {
+    color: var(--ink);
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  /* Active page — cyan accent + subtle tint. */
+  .menu-link[aria-current='page'] {
+    color: var(--c-cyan);
+    background: rgba(75, 157, 255, 0.1);
+    box-shadow: inset 2px 0 0 var(--c-cyan);
+  }
+
+  .menu-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+    z-index: -1;
+  }
+
+  [data-menu-open] .menu-backdrop {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .menu-toggle,
+    .menu-bars span,
+    .menu-panel,
+    .menu-link,
+    .menu-backdrop {
+      transition: none;
+    }
+  }
+</style>
+
+<script>
+  // Re-binds on every navigation (astro:page-load) so the toggle keeps working
+  // after View Transitions swaps. AbortController cleans up document-level
+  // listeners (keydown) from the previous page to avoid stacking.
+  let controller: AbortController | null = null;
+
+  function setupMenu(): void {
+    controller?.abort();
+    controller = new AbortController();
+    const { signal } = controller;
+
+    const menu = document.querySelector<HTMLElement>('[data-menu]');
+    if (!menu) return;
+    const toggle = menu.querySelector<HTMLButtonElement>('[data-menu-toggle]');
+    const panel = menu.querySelector<HTMLElement>('[data-menu-panel]');
+    const backdrop = menu.querySelector<HTMLElement>('[data-menu-backdrop]');
+
+    const close = (): void => {
+      menu.removeAttribute('data-menu-open');
+      toggle?.setAttribute('aria-expanded', 'false');
+    };
+    const open = (): void => {
+      menu.setAttribute('data-menu-open', '');
+      toggle?.setAttribute('aria-expanded', 'true');
+    };
+
+    toggle?.addEventListener(
+      'click',
+      () => {
+        if (menu.hasAttribute('data-menu-open')) close();
+        else open();
+      },
+      { signal }
+    );
+
+    backdrop?.addEventListener('click', close, { signal });
+    panel?.querySelectorAll<HTMLAnchorElement>('a').forEach((a) =>
+      a.addEventListener('click', close, { signal })
+    );
+
+    document.addEventListener(
+      'keydown',
+      (e: KeyboardEvent) => {
+        if (e.key === 'Escape') close();
+      },
+      { signal }
+    );
+
+    // Close before a navigation begins so the panel never lingers over the
+    // outgoing page snapshot.
+    document.addEventListener('astro:before-preparation', close, { signal });
+  }
+
+  // Window guard: register the astro:page-load listener once per full load.
+  if (!(window as unknown as { __kogaMenuBound?: boolean }).__kogaMenuBound) {
+    (window as unknown as { __kogaMenuBound?: boolean }).__kogaMenuBound = true;
+    document.addEventListener('astro:page-load', setupMenu);
+  }
+  setupMenu();
+</script>

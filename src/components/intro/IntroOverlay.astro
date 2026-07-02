@@ -1,0 +1,112 @@
+---
+import Stamp from '../brand/Stamp.astro';
+---
+
+<div id="intro-overlay" aria-hidden="true">
+  <div class="intro-pattern"></div>
+  <div class="intro-content">
+    <div class="intro-logo">
+      <Stamp variant="bw" size={440} />
+    </div>
+  </div>
+  <button class="intro-skip" type="button" data-intro-skip>
+    Skip intro
+  </button>
+</div>
+
+<style>
+  #intro-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: none; /* shown only when html.intro-active is set */
+    align-items: center;
+    justify-content: center;
+    background: var(--bg);
+    overflow: hidden;
+    clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%);
+  }
+
+  :global(html.intro-active) #intro-overlay {
+    display: flex;
+  }
+
+  /* Background pattern — hidden until the pulse "forces" it into view.
+     Revealed as a radial ripple from the logo center via clip-path. */
+  .intro-pattern {
+    position: absolute;
+    inset: -50%;
+    background-image: url('/pattern/seamless-pattern.png');
+    background-size: 360px 279px;
+    background-repeat: repeat;
+    opacity: 0.14;
+    transform: rotate(30deg);
+    clip-path: circle(0px at 50% 50%);
+  }
+
+  .intro-content {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    perspective: 1000px;
+  }
+
+  /* The stamp logo — no circle, just the mark pulsating with a neon glow. */
+  .intro-logo {
+    position: relative;
+    z-index: 1;
+    transform-style: preserve-3d;
+    animation: logo-pulse 2.6s ease-in-out infinite;
+  }
+
+  @keyframes logo-pulse {
+    0%,
+    100% {
+      filter:
+        drop-shadow(0 0 20px rgba(253, 133, 216, 0.45))
+        drop-shadow(0 0 40px rgba(136, 99, 255, 0.25));
+    }
+    50% {
+      filter:
+        drop-shadow(0 0 34px rgba(75, 157, 255, 0.65))
+        drop-shadow(0 0 68px rgba(253, 133, 216, 0.4));
+    }
+  }
+
+  /* Shockwave ring removed — the pulse is the logo throbbing + the ripple
+     reveal, with no visible circle. */
+
+  .intro-skip {
+    position: absolute;
+    bottom: var(--space-8);
+    right: var(--space-8);
+    padding: var(--space-2) var(--space-4);
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--ink-muted);
+    font-family: var(--font-body);
+    font-size: var(--step--1);
+    border-radius: var(--radius-pill);
+    cursor: pointer;
+    transition: color 0.2s ease, border-color 0.2s ease;
+  }
+
+  .intro-skip:hover,
+  .intro-skip:focus-visible {
+    color: var(--ink);
+    border-color: var(--c-cyan);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .intro-logo {
+      animation: none;
+      filter: drop-shadow(0 0 20px rgba(253, 133, 216, 0.45));
+    }
+  }
+</style>
+
+<script>
+  import { runIntro } from '../../scripts/intro';
+  runIntro();
+</script>

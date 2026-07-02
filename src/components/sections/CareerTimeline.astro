@@ -1,0 +1,156 @@
+---
+import { getCollection } from 'astro:content';
+
+const profiles = await getCollection('linkedin');
+const profile = profiles[0]?.data;
+const positions = profile?.positions ?? [];
+
+function formatMonth(ym: string): string {
+  const [y, m] = ym.split('-').map(Number);
+  return new Date(y, m - 1).toLocaleDateString('en-US', {
+    month: 'short',
+    year: 'numeric',
+  });
+}
+
+function formatRange(start: string, end: string | undefined, isCurrent: boolean): string {
+  const s = formatMonth(start);
+  const e = isCurrent ? 'Present' : end ? formatMonth(end) : '';
+  return e ? `${s} — ${e}` : s;
+}
+---
+
+<ol class="timeline" role="list">
+  {
+    positions.map((pos) => (
+      <li class="timeline-item">
+        <span class="timeline-dot" aria-hidden="true" />
+        <div class="timeline-card frosted">
+          <div class="timeline-head">
+            <h3 class="timeline-title">{pos.title}</h3>
+            <span class="timeline-company">{pos.company}</span>
+          </div>
+          <p class="timeline-dates">
+            {formatRange(pos.startDate, pos.endDate, pos.isCurrent)}
+          </p>
+          {pos.location && <p class="timeline-loc">{pos.location}</p>}
+          {pos.description && <p class="timeline-desc">{pos.description}</p>}
+          {pos.skills && pos.skills.length > 0 && (
+            <ul class="timeline-skills" role="list">
+              {pos.skills.map((s) => (
+                <li class="pill">{s}</li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </li>
+    ))
+  }
+</ol>
+
+<style>
+  .timeline {
+    list-style: none;
+    margin: 0;
+    padding: 0 0 0 var(--space-6);
+    border-left: 2px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+  }
+
+  .timeline-item {
+    position: relative;
+  }
+
+  .timeline-dot {
+    position: absolute;
+    left: calc(var(--space-6) * -1 - 6px);
+    top: 6px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--rainbow-gradient);
+    box-shadow: 0 0 12px rgba(253, 133, 216, 0.7);
+  }
+
+  .timeline-card {
+    padding: var(--space-4) var(--space-6);
+    border-radius: var(--radius-md);
+    transition: border-color 0.2s ease, transform 0.2s ease;
+  }
+
+  .timeline-card:hover {
+    border-color: rgba(253, 133, 216, 0.5);
+    transform: translateX(4px);
+  }
+
+  .timeline-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-2);
+  }
+
+  .timeline-title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: var(--step-2);
+    color: var(--ink);
+  }
+
+  .timeline-company {
+    color: var(--c-cyan);
+    font-size: var(--step-0);
+    font-weight: 600;
+  }
+
+  .timeline-dates {
+    margin: var(--space-1) 0 0;
+    color: var(--ink-muted);
+    font-size: var(--step--1);
+    font-style: italic;
+  }
+
+  .timeline-loc {
+    margin: var(--space-1) 0 0;
+    color: var(--ink-muted);
+    font-size: var(--step--1);
+    opacity: 0.8;
+  }
+
+  .timeline-desc {
+    margin-top: var(--space-3);
+    color: var(--ink-muted);
+    font-size: var(--step-0);
+    line-height: 1.7;
+  }
+
+  .timeline-skills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-top: var(--space-3);
+    padding: 0;
+    list-style: none;
+  }
+
+  .pill {
+    padding: var(--space-1) var(--space-3);
+    background: rgba(75, 157, 255, 0.12);
+    border: 1px solid rgba(75, 157, 255, 0.3);
+    border-radius: var(--radius-pill);
+    color: var(--c-cyan);
+    font-size: var(--step--1);
+    font-weight: 600;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .timeline-card {
+      transition: none;
+    }
+    .timeline-card:hover {
+      transform: none;
+    }
+  }
+</style>

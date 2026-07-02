@@ -1,0 +1,28 @@
+---
+import { Image } from 'astro:assets';
+import stampRainbow from '../../assets/logo/stamp-rainbow.png';
+import stampBwV3 from '../../assets/logo/stamp-bw-v3.png';
+
+interface Props {
+  variant?: 'rainbow' | 'bw';
+  size?: number;
+  alt?: string;
+  class?: string;
+}
+
+const {
+  variant = 'rainbow',
+  size = 200,
+  alt = 'Koga Noodle stamp',
+  class: className,
+} = Astro.props;
+
+const stamps = {
+  rainbow: stampRainbow,
+  bw: stampBwV3,
+} as const;
+
+const src = stamps[variant];
+---
+
+<Image src={src} alt={alt} width={size} class={className} loading="lazy" />

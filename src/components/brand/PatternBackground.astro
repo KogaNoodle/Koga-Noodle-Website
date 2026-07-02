@@ -1,0 +1,91 @@
+---
+/**
+ * Persistent animated background layer.
+ * - CSS-tiled seamless pattern (served from /pattern/ for exact pixel tiling).
+ * - Slow drift via @keyframes (shifts exactly one tile → seamless loop).
+ * - Two neon radial-gradient overlays with slow pulse.
+ * - transition:persist keeps it continuous across route changes (the "seamless" trick).
+ * No video assets — pure CSS animation.
+ */
+---
+
+<div class="pattern-bg" aria-hidden="true"></div>
+<div class="glow glow-blue" aria-hidden="true"></div>
+<div class="glow glow-pink" aria-hidden="true"></div>
+
+<style>
+  .pattern-bg {
+    position: fixed;
+    inset: 0;
+    z-index: -2;
+    background-image: url('/pattern/seamless-pattern.png');
+    background-repeat: repeat;
+    background-size: 360px 279px; /* 1/5 of native 1800x1395 → seamless tile */
+    opacity: 0.12;
+    animation: drift 40s linear infinite;
+    pointer-events: none;
+  }
+
+  .glow {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    mix-blend-mode: screen;
+  }
+
+  .glow-blue {
+    background: radial-gradient(
+      circle at 12% 18%,
+      rgba(75, 157, 255, 0.28),
+      transparent 45%
+    );
+    animation: pulse-blue 9s ease-in-out infinite;
+  }
+
+  .glow-pink {
+    background: radial-gradient(
+      circle at 88% 82%,
+      rgba(253, 133, 216, 0.24),
+      transparent 45%
+    );
+    animation: pulse-pink 11s ease-in-out infinite;
+  }
+
+  @keyframes drift {
+    from {
+      background-position: 0 0;
+    }
+    to {
+      background-position: 360px 279px; /* exactly one tile → seamless loop */
+    }
+  }
+
+  @keyframes pulse-blue {
+    0%,
+    100% {
+      opacity: 0.55;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
+
+  @keyframes pulse-pink {
+    0%,
+    100% {
+      opacity: 0.45;
+    }
+    50% {
+      opacity: 0.9;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .pattern-bg,
+    .glow-blue,
+    .glow-pink {
+      animation: none;
+    }
+  }
+</style>

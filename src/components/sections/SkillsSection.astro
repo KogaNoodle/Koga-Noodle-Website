@@ -1,0 +1,201 @@
+---
+import { getCollection } from 'astro:content';
+import SectionHeading from '../brand/SectionHeading.astro';
+import Stamp from '../brand/Stamp.astro';
+import CareerTimeline from './CareerTimeline.astro';
+
+const profiles = await getCollection('linkedin');
+const profile = profiles[0]?.data;
+const skills = profile?.skills ?? [];
+
+const byCategory = new Map<string, typeof skills>();
+for (const s of skills) {
+  const cat = s.category ?? 'Other';
+  const arr = byCategory.get(cat) ?? [];
+  arr.push(s);
+  byCategory.set(cat, arr);
+}
+
+const maxEndorsements = Math.max(
+  ...skills.map((s) => s.endorsements ?? 0),
+  1
+);
+---
+
+<section class="skills container">
+  <div class="skills-stamp-wrap" aria-hidden="true">
+    <Stamp size={300} />
+  </div>
+  <div class="skills-inner">
+    <SectionHeading text="SKILLS" />
+
+    <div class="skills-grid">
+      {
+        Array.from(byCategory.entries()).map(([cat, items]) => (
+          <div class="skill-group frosted">
+            <h2 class="group-title">{cat}</h2>
+            <ul class="skill-list" role="list">
+              {items.map((s) => (
+                <li class="skill">
+                  <span class="skill-name">{s.name}</span>
+                  <span
+                    class="skill-bar"
+                    role="meter"
+                    aria-valuenow={s.endorsements}
+                    aria-valuemin="0"
+                    aria-valuemax={maxEndorsements}
+                    aria-label={`${s.name} endorsements`}
+                  >
+                    <span
+                      class="skill-bar-fill"
+                      style={`width:${Math.round((s.endorsements / maxEndorsements) * 100)}%`}
+                    />
+                  </span>
+                  <span class="skill-count">{s.endorsements}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))
+      }
+    </div>
+
+    <div class="experience">
+      <h2 class="block-title">Experience</h2>
+      <CareerTimeline />
+    </div>
+  </div>
+</section>
+
+<script>
+  import { runSkillsChoreography } from '../../scripts/skillsChoreography';
+  runSkillsChoreography();
+</script>
+
+<style>
+  .skills {
+    position: relative;
+    padding-block: var(--space-16);
+  }
+
+  .skills-stamp-wrap {
+    position: absolute;
+    top: 12%;
+    right: -4%;
+    width: 300px;
+    opacity: 0.07;
+    pointer-events: none;
+    z-index: 0;
+    animation: stamp-drift 26s ease-in-out infinite;
+  }
+
+  @keyframes stamp-drift {
+    0%,
+    100% {
+      transform: rotate(-3deg) translateY(0);
+    }
+    50% {
+      transform: rotate(3deg) translateY(-12px);
+    }
+  }
+
+  .skills-inner {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-16);
+  }
+
+  .skills-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: var(--space-6);
+  }
+
+  .skill-group {
+    padding: var(--space-6);
+    border-radius: var(--radius-lg);
+  }
+
+  .group-title {
+    margin: 0 0 var(--space-4);
+    font-family: var(--font-display);
+    font-size: var(--step-2);
+    color: var(--c-cyan);
+  }
+
+  .skill-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  .skill {
+    display: grid;
+    grid-template-columns: 1fr 1.5fr auto;
+    align-items: center;
+    gap: var(--space-3);
+  }
+
+  .skill-name {
+    font-size: var(--step--1);
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  .skill-bar {
+    position: relative;
+    height: 8px;
+    background: rgba(245, 242, 238, 0.08);
+    border-radius: var(--radius-pill);
+    overflow: hidden;
+  }
+
+  .skill-bar-fill {
+    display: block;
+    height: 100%;
+    background: var(--rainbow-gradient);
+    background-size: 200% 100%;
+    border-radius: var(--radius-pill);
+    animation: bar-shimmer 6s linear infinite;
+  }
+
+  @keyframes bar-shimmer {
+    to {
+      background-position: 200% 0;
+    }
+  }
+
+  .skill-count {
+    font-size: var(--step--1);
+    color: var(--ink-muted);
+    min-width: 2ch;
+    text-align: right;
+  }
+
+  .experience {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+  }
+
+  .block-title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: var(--step-3);
+    color: var(--ink);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .skills-stamp-wrap {
+      animation: none;
+    }
+    .skill-bar-fill {
+      animation: none;
+    }
+  }
+</style>

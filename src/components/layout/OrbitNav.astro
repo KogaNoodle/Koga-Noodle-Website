@@ -1,0 +1,247 @@
+---
+// Floating glass-sphere nav. One sphere per section OTHER than the current
+// page (the current section's bubble is hidden). The nav container is a
+// zero-size point pinned to a target element's center by JS; each sphere is
+// offset to its angular slot and gently drifts. Pass `target` (a CSS
+// selector) from a page to anchor the orbit there; if omitted, the nav
+// falls back to orbiting the viewport center.
+
+const icons: Record<string, string> = {
+  '/': '<path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/>',
+  '/about':
+    '<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+};
+
+const sections = [
+  { href: '/', label: 'Home' },
+  { href: '/about', label: 'About' },
+];
+const path = Astro.url.pathname.replace(/\/+$/, '') || '/';
+const others = sections.filter((s) => s.href !== path);
+const n = others.length;
+
+interface Props {
+  target?: string;
+}
+const { target }: Props = Astro.props;
+---
+
+{n > 0 && (
+  <nav
+    class="orbit-nav"
+    aria-label="Sections"
+    style={`--n:${n}`}
+    data-orbit-nav
+    data-orbit-target={target ?? ''}
+  >
+    {
+      others.map((s, i) => (
+        <div class="sphere-anchor" style={`--i:${i}`}>
+          <a class="orbit-sphere" href={s.href} aria-label={s.label}>
+            <span class="sphere-orb">
+              <svg
+                viewBox="0 0 24 24"
+                width="26"
+                height="26"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <g set:html={icons[s.href]} />
+              </svg>
+            </span>
+          </a>
+        </div>
+      ))
+    }
+  </nav>
+)}
+
+<style>
+  .orbit-nav {
+    position: fixed;
+    /* Zero-size point — JS pins left/top to the target's center. Spheres
+       orbit this point via --r. Hidden until first positioned to avoid a
+       flash at the viewport origin. */
+    width: 0;
+    height: 0;
+    visibility: hidden;
+    pointer-events: none;
+    z-index: 50;
+    --r: clamp(220px, 42vmin, 360px);
+  }
+
+  /* Each anchor is a point at the container's center (50% of a zero-size
+     box = the origin), offset to its angular slot. The sphere itself does
+     the drifting, not the anchor. */
+  .sphere-anchor {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    --angle: calc(var(--i) * 360deg / var(--n) + 45deg);
+    transform: translate(-50%, -50%)
+      translate(
+        calc(sin(var(--angle)) * var(--r)),
+        calc(-1 * cos(var(--angle)) * var(--r))
+      );
+  }
+
+  .orbit-sphere {
+    display: block;
+    pointer-events: auto;
+    text-decoration: none;
+    color: var(--ink);
+    animation: sphere-float 8s ease-in-out infinite;
+    animation-delay: calc(var(--i) * -2.6s);
+  }
+
+  @keyframes sphere-float {
+    0%,
+    100% {
+      transform: translate(0, 0);
+    }
+    25% {
+      transform: translate(5px, -7px);
+    }
+    50% {
+      transform: translate(-4px, -5px);
+    }
+    75% {
+      transform: translate(-5px, 6px);
+    }
+  }
+
+  /* Glass orb: specular highlight, violet underglow, light translucent body,
+     inset rim + depth shadow. Deliberately lighter than the .frosted social
+     buttons so the two read as distinct surfaces. */
+  .sphere-orb {
+    display: grid;
+    place-items: center;
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background:
+      radial-gradient(
+        circle at 34% 28%,
+        rgba(255, 255, 255, 0.9),
+        rgba(255, 255, 255, 0.15) 20%,
+        transparent 42%
+      ),
+      radial-gradient(
+        circle at 68% 78%,
+        rgba(136, 99, 255, 0.22),
+        transparent 55%
+      ),
+      rgba(245, 242, 238, 0.05);
+    backdrop-filter: blur(14px) saturate(150%);
+    -webkit-backdrop-filter: blur(14px) saturate(150%);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    box-shadow:
+      inset 0 2px 4px rgba(255, 255, 255, 0.45),
+      inset 0 -12px 20px rgba(0, 0, 0, 0.18),
+      0 8px 24px rgba(0, 0, 0, 0.22);
+    transition: transform 0.25s ease, box-shadow 0.3s ease;
+  }
+
+  .sphere-orb svg {
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.35));
+  }
+
+  .orbit-sphere:hover .sphere-orb,
+  .orbit-sphere:focus-visible .sphere-orb {
+    transform: scale(1.12);
+    box-shadow:
+      inset 0 2px 4px rgba(255, 255, 255, 0.5),
+      inset 0 -12px 20px rgba(0, 0, 0, 0.18),
+      0 0 24px rgba(75, 157, 255, 0.5),
+      0 0 48px rgba(253, 133, 216, 0.3);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .orbit-sphere {
+      animation: none;
+    }
+  }
+</style>
+
+<script>
+  // Pins the orbit point to the target element's center and sizes --r so the
+  // spheres clear the target. Re-runs on astro:page-load (View Transitions),
+  // and repositions on resize/scroll/target-size-change (rAF-throttled).
+  let controller: AbortController | null = null;
+  let resizeObserver: ResizeObserver | null = null;
+  let rafId: number | null = null;
+
+  function schedule(fn: () => void): void {
+    if (rafId !== null) return;
+    rafId = requestAnimationFrame(() => {
+      rafId = null;
+      fn();
+    });
+  }
+
+  function setupOrbit(): void {
+    controller?.abort();
+    resizeObserver?.disconnect();
+    if (rafId !== null) {
+      cancelAnimationFrame(rafId);
+      rafId = null;
+    }
+
+    const nav = document.querySelector<HTMLElement>('[data-orbit-nav]');
+    if (!nav) return;
+    const sel = nav.getAttribute('data-orbit-target') || '';
+    const target = sel ? document.querySelector<HTMLElement>(sel) : null;
+
+    // No target selector: orbit the viewport center as a graceful fallback
+    // so the nav still renders on pages that didn't declare a target.
+    const position = (): void => {
+      if (target) {
+        const r = target.getBoundingClientRect();
+        if (r.width === 0 && r.height === 0) {
+          nav.style.visibility = 'hidden';
+          return;
+        }
+        nav.style.left = r.left + r.width / 2 + 'px';
+        nav.style.top = r.top + r.height / 2 + 'px';
+        // Clear the target's half-diagonal + padding so spheres float outside.
+        nav.style.setProperty(
+          '--r',
+          Math.hypot(r.width, r.height) / 2 + 64 + 'px'
+        );
+      } else {
+        nav.style.left = window.innerWidth / 2 + 'px';
+        nav.style.top = window.innerHeight / 2 + 'px';
+        nav.style.setProperty('--r', 'clamp(190px, 38vmin, 340px)');
+      }
+      nav.style.visibility = 'visible';
+    };
+
+    controller = new AbortController();
+    const { signal } = controller;
+
+    position();
+    window.addEventListener('resize', () => schedule(position), { signal });
+    window.addEventListener('scroll', () => schedule(position), {
+      passive: true,
+      signal,
+    });
+    if (target) {
+      resizeObserver = new ResizeObserver(() => schedule(position));
+      resizeObserver.observe(target);
+    }
+  }
+
+  if (
+    !(window as unknown as { __kogaOrbitBound?: boolean }).__kogaOrbitBound
+  ) {
+    (window as unknown as { __kogaOrbitBound?: boolean }).__kogaOrbitBound =
+      true;
+    document.addEventListener('astro:page-load', setupOrbit);
+  }
+  setupOrbit();
+</script>

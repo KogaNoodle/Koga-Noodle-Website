@@ -1,0 +1,38 @@
+---
+import { Image } from 'astro:assets';
+import logomarkRainbow from '../../assets/logo/logomark-rainbow.png';
+import logomarkWhite from '../../assets/logo/logomark-white.png';
+import logomarkBlack from '../../assets/logo/logomark-black.png';
+import logotitleRainbow from '../../assets/logo/logotitle-rainbow.png';
+import logotitleWhite from '../../assets/logo/logotitle-white.png';
+import verticalRainbow from '../../assets/logo/vertical-rainbow.png';
+
+interface Props {
+  variant?: 'rainbow' | 'white' | 'black';
+  layout?: 'mark' | 'title' | 'vertical';
+  alt?: string;
+  width?: number;
+  loading?: 'eager' | 'lazy';
+  class?: string;
+}
+
+const {
+  variant = 'rainbow',
+  layout = 'vertical',
+  alt = 'Koga Noodle logo',
+  width,
+  loading = 'eager',
+  class: className,
+} = Astro.props;
+
+const images = {
+  mark: { rainbow: logomarkRainbow, white: logomarkWhite, black: logomarkBlack },
+  title: { rainbow: logotitleRainbow, white: logotitleWhite, black: logotitleWhite },
+  vertical: { rainbow: verticalRainbow, white: verticalRainbow, black: verticalRainbow },
+} as const;
+
+const src = images[layout][variant];
+const imgProps = width ? { width } : {};
+---
+
+<Image src={src} alt={alt} loading={loading} class={className} {...imgProps} />

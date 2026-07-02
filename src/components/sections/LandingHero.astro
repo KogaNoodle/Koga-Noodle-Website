@@ -1,0 +1,114 @@
+---
+import Logo from '../brand/Logo.astro';
+import SocialLinks from '../ui/SocialLinks.astro';
+---
+
+<section class="hero container">
+  <h1 class="sr-only">Koga Noodle</h1>
+  <div class="hero-logo">
+    <Logo variant="rainbow" layout="vertical" width={340} class="hero-logo-img" />
+  </div>
+  <p class="hero-bio">
+    Your friendly
+    <span class="hero-word rainbow-text" data-cycling-word>noodle dragon</span>
+    on the internet
+  </p>
+  <div class="hero-socials">
+    <SocialLinks />
+  </div>
+</section>
+
+<style>
+  .hero {
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-8);
+    text-align: center;
+    padding-block: var(--space-16);
+  }
+
+  .hero-logo {
+    filter: drop-shadow(0 0 24px rgba(136, 99, 255, 0.35));
+  }
+
+  .hero-bio {
+    max-width: 42rem;
+    font-size: var(--step-1);
+    color: var(--ink-muted);
+    line-height: 1.7;
+  }
+
+  .hero-word {
+    transition: opacity 0.28s ease;
+  }
+
+  /* Staggered fade-in (opacity) + a subtle perpetual float (transform).
+     Splitting by property lets both animations coexist on one element
+     without clobbering each other; staggered float delays keep the motion
+     organic rather than lock-stepped. */
+  .hero-logo,
+  .hero-bio,
+  .hero-socials {
+    animation: hero-in 0.7s var(--ease, cubic-bezier(0.22, 1, 0.36, 1)) both,
+      hero-float 7s ease-in-out infinite;
+  }
+  .hero-logo {
+    animation-delay: 0.1s, 0s;
+  }
+  .hero-bio {
+    animation-delay: 0.3s, 0.9s;
+  }
+  .hero-socials {
+    animation-delay: 0.5s, 1.7s;
+  }
+
+  @keyframes hero-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes hero-float {
+    0%,
+    100% {
+      transform: translate(0, 0);
+    }
+    25% {
+      transform: translate(3px, -5px);
+    }
+    50% {
+      transform: translate(-2px, -3px);
+    }
+    75% {
+      transform: translate(-3px, 4px);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hero-logo,
+    .hero-bio,
+    .hero-socials {
+      opacity: 1;
+      animation: none;
+    }
+  }
+</style>
+
+<script>
+  import { runHeroCycling } from '../../scripts/heroCycling';
+  // Re-run on each navigation (window-guarded so the listener binds once).
+  if (
+    !(window as unknown as { __kogaCyclingBound?: boolean }).__kogaCyclingBound
+  ) {
+    (window as unknown as { __kogaCyclingBound?: boolean }).__kogaCyclingBound =
+      true;
+    document.addEventListener('astro:page-load', runHeroCycling);
+  }
+  runHeroCycling();
+</script>

@@ -1,0 +1,76 @@
+/* ============================================================
+   Game-like 3D route transitions (View Transitions API)
+   The main content area turns in 3D space while the persisted
+   pattern background stays continuous.
+   ============================================================ */
+
+:root {
+  perspective: 1400px;
+}
+
+/* `perspective` applies to direct children only — set on body so the fixed
+   intro overlay (a body child) renders its rotateY/rotateX exit in 3D. */
+body {
+  perspective: 1400px;
+}
+
+/* Disable the default root crossfade so only the named content
+   transition plays (the persisted background is excluded entirely). */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+}
+
+::view-transition-group(content) {
+  perspective: 1400px;
+}
+
+::view-transition-old(content) {
+  animation: koga-page-out 0.7s cubic-bezier(0.76, 0, 0.24, 1) both;
+}
+
+::view-transition-new(content) {
+  animation: koga-page-in 0.7s cubic-bezier(0.76, 0, 0.24, 1) both;
+}
+
+@keyframes koga-page-out {
+  0% {
+    transform: translateZ(0) rotateY(0deg) scale(1);
+    opacity: 1;
+    filter: blur(0px);
+  }
+  100% {
+    transform: translateZ(-640px) rotateY(-44deg) scale(0.88);
+    opacity: 0;
+    filter: blur(14px);
+  }
+}
+
+@keyframes koga-page-in {
+  0% {
+    transform: translateZ(-640px) rotateY(44deg) scale(0.88);
+    opacity: 0;
+    filter: blur(14px);
+  }
+  100% {
+    transform: translateZ(0) rotateY(0deg) scale(1);
+    opacity: 1;
+    filter: blur(0px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(content),
+  ::view-transition-new(content) {
+    animation: koga-page-fade 0.25s ease both;
+  }
+
+  @keyframes koga-page-fade {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+}

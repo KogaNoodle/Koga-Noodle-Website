@@ -1,0 +1,60 @@
+---
+import '../styles/tokens.css';
+import '../styles/transitions.css';
+import { ClientRouter } from 'astro:transitions';
+import PatternBackground from '../components/brand/PatternBackground.astro';
+import MainMenu from '../components/layout/MainMenu.astro';
+import OrbitNav from '../components/layout/OrbitNav.astro';
+import IntroOverlay from '../components/intro/IntroOverlay.astro';
+
+interface Props {
+  title?: string;
+  description?: string;
+  orbitTarget?: string;
+}
+
+const {
+  title = 'Koga Noodle',
+  description = 'Personal website of Koga Noodle — creative technologist and noodle enthusiast.',
+  orbitTarget,
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="color-scheme" content="dark" />
+    <ClientRouter />
+    <script is:inline>
+      // Show the intro splash on every FULL page load (reload / direct URL /
+      // first visit), but NOT on in-app SPA navigations. `window` persists
+      // across SPA swaps but resets on a full reload, so this flag fires once
+      // per real page load.
+      (function () {
+        try {
+          if (window.__kogaIntroScheduled) return;
+          window.__kogaIntroScheduled = true;
+          var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+          if (!reduce) {
+            document.documentElement.classList.add('intro-active');
+          }
+        } catch (e) {}
+      })();
+    </script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <IntroOverlay />
+    <PatternBackground transition:persist />
+    <MainMenu />
+    <OrbitNav target={orbitTarget} />
+    <main id="main" transition:name="content">
+      <slot />
+    </main>
+  </body>
+</html>

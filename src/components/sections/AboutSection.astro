@@ -1,0 +1,108 @@
+---
+import SectionHeading from '../brand/SectionHeading.astro';
+import Stamp from '../brand/Stamp.astro';
+---
+
+<section class="about container">
+  <div class="about-stamp-wrap" aria-hidden="true">
+    <Stamp size={280} />
+  </div>
+  <article class="about-card frosted">
+    <SectionHeading text="ABOUT" />
+    <div class="about-body">
+      <p>
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod
+        tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim
+        veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea
+        commodo consequat.
+      </p>
+      <p>
+        Duis aute irure dolor in reprehenderit in voluptate velit esse cillum
+        dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
+        proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+      </p>
+      <p>
+        Real bio coming soon — replace this placeholder with your story.
+      </p>
+    </div>
+  </article>
+</section>
+
+<style>
+  .about {
+    position: relative;
+    min-height: 78vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-block: var(--space-16);
+  }
+
+  .about-stamp-wrap {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 280px;
+    opacity: 0.08;
+    pointer-events: none;
+    z-index: 0;
+    animation: stamp-drift 24s ease-in-out infinite;
+  }
+
+  @keyframes stamp-drift {
+    0%,
+    100% {
+      transform: translate(-50%, -50%) rotate(-4deg);
+    }
+    50% {
+      transform: translate(-50%, -52%) rotate(4deg);
+    }
+  }
+
+  .about-card {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 48rem;
+    padding: var(--space-12) var(--space-8);
+    border-radius: var(--radius-lg);
+    animation: card-in 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both;
+  }
+
+  .about-body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    margin-top: var(--space-6);
+    color: var(--ink-muted);
+    font-size: var(--step-0);
+    line-height: 1.8;
+  }
+
+  .about-body p:last-child {
+    color: var(--ink);
+    font-style: italic;
+    opacity: 0.7;
+  }
+
+  @keyframes card-in {
+    from {
+      opacity: 0;
+      transform: translateY(28px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .about-stamp-wrap {
+      animation: none;
+    }
+    .about-card {
+      animation: none;
+    }
+  }
+</style>

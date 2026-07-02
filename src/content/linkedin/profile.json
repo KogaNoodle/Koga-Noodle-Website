@@ -1,0 +1,40 @@
+{
+  "headline": "Placeholder Headline — Creative Technologist & Noodle Enthusiast",
+  "summary": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. This is placeholder summary text that will be replaced with real LinkedIn data later.",
+  "positions": [
+    {
+      "title": "Senior Placeholder Engineer",
+      "company": "Acme Corp",
+      "location": "Remote",
+      "startDate": "2022-03",
+      "isCurrent": true,
+      "description": "Leading placeholder initiatives and building noodle-themed interfaces.",
+      "skills": ["TypeScript", "Astro", "GSAP", "Accessibility"]
+    },
+    {
+      "title": "Frontend Developer",
+      "company": "Globex",
+      "location": "São Paulo, BR",
+      "startDate": "2019-06",
+      "endDate": "2022-02",
+      "isCurrent": false,
+      "description": "Built and maintained customer-facing web applications.",
+      "skills": ["JavaScript", "React", "CSS"]
+    }
+  ],
+  "skills": [
+    { "name": "TypeScript", "category": "Frontend", "endorsements": 42 },
+    { "name": "Astro", "category": "Frontend", "endorsements": 18 },
+    { "name": "GSAP", "category": "Creative", "endorsements": 12 },
+    { "name": "Node.js", "category": "Backend", "endorsements": 35 },
+    { "name": "Accessibility", "category": "Frontend", "endorsements": 9 }
+  ],
+  "education": [
+    {
+      "school": "University of Placeholder",
+      "degree": "B.Sc. Computer Science",
+      "start": "2015",
+      "end": "2019"
+    }
+  ]
+}

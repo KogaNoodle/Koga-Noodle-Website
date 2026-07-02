@@ -1,0 +1,116 @@
+---
+import { siX, siBluesky, siYoutube, siTwitch, siTelegram, siDiscord, siVrchat } from 'simple-icons';
+
+const socials = [
+  { name: 'Twitter / X', url: 'https://twitter.com/koganoodle', icon: siX },
+  { name: 'Bluesky', url: 'https://bsky.app/profile/koga.noodle.best', icon: siBluesky },
+  { name: 'YouTube', url: 'https://www.youtube.com/@KogaNoodle', icon: siYoutube },
+  { name: 'Twitch', url: 'https://twitch.tv/koganoodle', icon: siTwitch },
+  { name: 'Telegram', url: 'https://t.me/koganoodle', icon: siTelegram },
+  { name: 'Discord', url: 'https://discordapp.com/users/170740606258249728', icon: siDiscord },
+  { name: 'VRChat', url: 'https://vrchat.com/home/user/usr_3ac1b6e1-e410-4156-a75a-3e370dd6b814', icon: siVrchat },
+];
+---
+
+<svg class="social-defs" aria-hidden="true" width="0" height="0" focusable="false">
+  <defs>
+    <linearGradient id="social-rainbow" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#4b9dff" />
+      <stop offset="12.5%" stop-color="#39cff1" />
+      <stop offset="25%" stop-color="#a5f2e0" />
+      <stop offset="37.5%" stop-color="#b2f2b6" />
+      <stop offset="50%" stop-color="#eff19f" />
+      <stop offset="62.5%" stop-color="#ffd39b" />
+      <stop offset="75%" stop-color="#ffb09f" />
+      <stop offset="87.5%" stop-color="#fd85d8" />
+      <stop offset="100%" stop-color="#8863ff" />
+    </linearGradient>
+  </defs>
+</svg>
+<ul class="social-links" role="list">
+  {
+    socials.map((s) => (
+      <li>
+        <a
+          class="social-link frosted"
+          href={s.url}
+          target="_blank"
+          rel="me noopener noreferrer"
+          aria-label={s.name}
+        >
+          <svg
+            viewBox="0 0 24 24"
+            width="26"
+            height="26"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <path class="icon-base" d={s.icon.path} fill="currentColor" />
+            <path class="icon-rainbow" d={s.icon.path} fill="url(#social-rainbow)" />
+          </svg>
+        </a>
+      </li>
+    ))
+  }
+</ul>
+
+<style>
+  .social-links {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-3);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .social-defs {
+    position: absolute;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+  }
+
+  .social-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 52px;
+    height: 52px;
+    color: var(--ink);
+    border-radius: var(--radius-md);
+    transition: box-shadow 0.3s ease, color 0.3s ease;
+  }
+
+  .social-link svg path {
+    transition: opacity 0.3s ease;
+  }
+
+  .icon-rainbow {
+    opacity: 0;
+  }
+
+  /* Hover: drop the frosted shadow and cross-fade the icon to rainbow. */
+  .social-link:hover,
+  .social-link:focus-visible {
+    box-shadow: none;
+  }
+
+  .social-link:hover .icon-base,
+  .social-link:focus-visible .icon-base {
+    opacity: 0;
+  }
+
+  .social-link:hover .icon-rainbow,
+  .social-link:focus-visible .icon-rainbow {
+    opacity: 1;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .social-link,
+    .social-link svg path {
+      transition: none;
+    }
+  }
+</style>
