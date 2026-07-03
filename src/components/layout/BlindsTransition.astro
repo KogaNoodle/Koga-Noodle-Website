@@ -34,16 +34,14 @@
 
   .blinds-strip {
     position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 100%;
-    height: 100%;
+    top: 0;
+    left: 0;
     transform-origin: center center;
     will-change: transform;
-    /* Size + position are fully driven by GSAP from computeGeometry(): the box
-       is scaled to length×thickness, rotated -45° (long axis → top-right↔bottom-
-       left, perpendicular to the TL→BR slide axis), then translated so its
-       center sits at the computed slide-axis position. */
+    /* Size + position are fully driven by GSAP from computeGeometry(): the
+       element is sized to length×thickness in px, rotated -45° (long axis →
+       top-right↔bottom-left, ⊥ to the TL→BR slide axis), then translated so
+       its center sits at the computed slide-axis position. */
   }
 
   .blinds-strip:nth-child(1) { background-color: var(--c-blue); }
