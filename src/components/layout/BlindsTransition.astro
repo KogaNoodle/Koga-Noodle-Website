@@ -52,16 +52,16 @@
 
   /* Entry: strips slide in sequentially (animation-delay staggered per strip).
      fill-mode: both holds each strip offscreen during its delay, then at rest
-     after it arrives. ease-out-sine: gentle deceleration as strips park. */
+     after it arrives. ease-out-expo: sharp deceleration, strips snap into place. */
   #blinds-overlay[data-phase='enter'] .blinds-strip {
-    animation: blinds-enter var(--strip-duration, 0.1s) cubic-bezier(0.61, 1, 0.88, 1) both;
+    animation: blinds-enter var(--strip-duration, 0.1s) cubic-bezier(0.16, 1, 0.3, 1) both;
     animation-delay: var(--enter-delay, 0s);
   }
 
   /* Exit: strips cascade out in a wave (staggered delays, FIFO).
-     ease-in-sine: gentle acceleration as strips leave. */
+     ease-in-expo: sharp acceleration, strips shoot offscreen. */
   #blinds-overlay[data-phase='exit'] .blinds-strip {
-    animation: blinds-exit var(--strip-duration, 0.1s) cubic-bezier(0.12, 0, 0.39, 0) both;
+    animation: blinds-exit var(--strip-duration, 0.1s) cubic-bezier(0.7, 0, 0.84, 0) both;
     animation-delay: var(--exit-delay, 0s);
   }
 
