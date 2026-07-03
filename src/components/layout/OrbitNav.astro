@@ -250,9 +250,14 @@ const { target, mobileTarget, anchorCorner }: Props = Astro.props;
         // corner anchor is requested (e.g. about page pins to top-left).
         const orbSize = 56;
         if (isMobile && !anchorCorner) {
-          nav.style.left = window.innerWidth - orbSize + 'px';
+          // Pin to the top-right of the target so the sphere sits near the
+          // logo's top-right corner instead of orbiting off-screen.
+          nav.style.left = r.right + 'px';
+          nav.style.top = r.top + 'px';
+          nav.style.setProperty('--r', '0px');
+        } else {
+          nav.style.setProperty('--r', rVal + 'px');
         }
-        nav.style.setProperty('--r', rVal + 'px');
         }
       } else {
         nav.style.left = window.innerWidth / 2 + 'px';
