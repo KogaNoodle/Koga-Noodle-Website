@@ -7,15 +7,15 @@
  */
 ---
 <div id="blinds-overlay" aria-hidden="true" hidden transition:persist>
-  <div class="blinds-strip" data-strip="0"></div>
-  <div class="blinds-strip" data-strip="1"></div>
-  <div class="blinds-strip" data-strip="2"></div>
-  <div class="blinds-strip" data-strip="3"></div>
-  <div class="blinds-strip" data-strip="4"></div>
-  <div class="blinds-strip" data-strip="5"></div>
-  <div class="blinds-strip" data-strip="6"></div>
-  <div class="blinds-strip" data-strip="7"></div>
-  <div class="blinds-strip" data-strip="8"></div>
+  <div class="blinds-strip" data-strip="0" style="--i:0"></div>
+  <div class="blinds-strip" data-strip="1" style="--i:1"></div>
+  <div class="blinds-strip" data-strip="2" style="--i:2"></div>
+  <div class="blinds-strip" data-strip="3" style="--i:3"></div>
+  <div class="blinds-strip" data-strip="4" style="--i:4"></div>
+  <div class="blinds-strip" data-strip="5" style="--i:5"></div>
+  <div class="blinds-strip" data-strip="6" style="--i:6"></div>
+  <div class="blinds-strip" data-strip="7" style="--i:7"></div>
+  <div class="blinds-strip" data-strip="8" style="--i:8"></div>
 </div>
 
 <style>
@@ -38,42 +38,46 @@
     left: 0;
     width: var(--length, 0px);
     height: var(--thickness, 0px);
+    transform: rotate(-45deg); /* static — long axis → top-right↔bottom-left */
     transform-origin: center center;
-    will-change: transform;
-    /* Size + position are set via CSS custom properties from
-       blindsGeometry.ts. The enter/exit keyframes below animate the
-       `transform` property (translate + rotate) — GPU-accelerated. */
+    will-change: translate;
+    /* The CSS `translate` property is animated by the keyframes below. It is
+       applied BEFORE `transform` in the rendering pipeline, so the element
+       is positioned in screen space, then rotated around its center. */
   }
 
-  /* Entry: strips slide in sequentially (animation-delay staggered per strip).
-     fill-mode: both holds each strip offscreen during its delay, then at rest
-     after it arrives. */
+  /* Z-index choreography:
+     Entry — strip 0 (blue) on top, strip 8 (violet) at bottom. Later strips
+     slide in BEHIND earlier ones.
+     Exit — reversed: strip 0 at bottom, strip 8 on top. The first strip exits
+     from under the others; the last strip is on top and exits last. */
   #blinds-overlay[data-phase='enter'] .blinds-strip {
+    z-index: calc(9 - var(--i, 0));
     animation: blinds-enter var(--strip-duration, 0.1s) ease-out both;
     animation-delay: var(--enter-delay, 0s);
   }
 
-  /* Exit: strips cascade out in a wave (staggered delays, FIFO). */
   #blinds-overlay[data-phase='exit'] .blinds-strip {
+    z-index: var(--i, 0);
     animation: blinds-exit var(--strip-duration, 0.1s) ease-in both;
     animation-delay: var(--exit-delay, 0s);
   }
 
   @keyframes blinds-enter {
     from {
-      transform: translate(var(--enter-x), var(--enter-y)) rotate(-45deg);
+      translate: var(--enter-x) var(--enter-y);
     }
     to {
-      transform: translate(var(--rest-x), var(--rest-y)) rotate(-45deg);
+      translate: var(--rest-x) var(--rest-y);
     }
   }
 
   @keyframes blinds-exit {
     from {
-      transform: translate(var(--rest-x), var(--rest-y)) rotate(-45deg);
+      translate: var(--rest-x) var(--rest-y);
     }
     to {
-      transform: translate(var(--exit-x), var(--exit-y)) rotate(-45deg);
+      translate: var(--exit-x) var(--exit-y);
     }
   }
 
