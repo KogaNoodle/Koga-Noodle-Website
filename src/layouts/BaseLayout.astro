@@ -25,6 +25,28 @@ const {
 
 const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://koga.gay');
 const ogImage = new URL('/og-image.jpg', Astro.site ?? 'https://koga.gay');
+
+const socials = [
+  'https://twitter.com/koganoodle',
+  'https://bsky.app/profile/koga.noodle.best',
+  'https://www.youtube.com/@KogaNoodle',
+  'https://twitch.tv/koganoodle',
+  'https://t.me/koganoodle',
+  'https://discordapp.com/users/170740606258249728',
+  'https://vrchat.com/home/user/usr_3ac1b6e1-e410-4156-a75a-3e370dd6b814',
+];
+
+const personSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Person',
+  name: 'Marcos Koga',
+  alternateName: 'Koga Noodle',
+  url: 'https://koga.gay',
+  image: ogImage.href,
+  jobTitle: 'Creative Technologist',
+  nationality: { '@type': 'Country', name: 'Brazil' },
+  sameAs: socials,
+};
 ---
 
 <!doctype html>
@@ -35,7 +57,9 @@ const ogImage = new URL('/og-image.jpg', Astro.site ?? 'https://koga.gay');
     <meta name="generator" content={Astro.generator} />
     <title>{title}</title>
     <meta name="description" content={description} />
+    <meta name="author" content="Marcos Koga" />
     <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#0e0e12" />
     <link rel="canonical" href={canonical} />
     <link rel="icon" href="/favicon.ico" sizes="48x48" />
     <link rel="icon" href="/favicon-32x32.png" sizes="32x32" type="image/png" />
@@ -52,6 +76,7 @@ const ogImage = new URL('/og-image.jpg', Astro.site ?? 'https://koga.gay');
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={ogImage} />
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(personSchema)} />
     <ClientRouter />
     <script is:inline>
       // Show the intro splash on every FULL page load (reload / direct URL /

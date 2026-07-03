@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://koga.gay/sitemap-index.xml
