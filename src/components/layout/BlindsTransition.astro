@@ -1,8 +1,8 @@
 ---
 /**
  * Rainbow blinds route-transition overlay.
- * transition:persist keeps it mounted across swaps so the GSAP timeline
- * in blindsTransition.ts is never interrupted by a DOM replacement.
+ * transition:persist keeps it mounted across swaps so the CSS animations
+ * in blindsTransition.ts are never interrupted by a DOM replacement.
  * Colors are applied via :nth-child against the brand tokens in tokens.css.
  */
 ---
@@ -36,12 +36,46 @@
     position: absolute;
     top: 0;
     left: 0;
+    width: var(--length, 0px);
+    height: var(--thickness, 0px);
+    transform: rotate(-45deg); /* long axis → top-right↔bottom-left (⊥ to slide) */
     transform-origin: center center;
-    will-change: transform;
-    /* Size + position are fully driven by GSAP from computeGeometry(): the
-       element is sized to length×thickness in px, rotated -45° (long axis →
-       top-right↔bottom-left, ⊥ to the TL→BR slide axis), then translated so
-       its center sits at the computed slide-axis position. */
+    will-change: translate;
+    /* `translate` is animated by the keyframes below; `transform: rotate`
+       stays static. The CSS `translate` property is applied before
+       `transform`, so the strip is positioned then rotated around its center. */
+  }
+
+  /* Entry: strips slide in sequentially (animation-delay staggered per strip).
+     fill-mode: both holds each strip offscreen during its delay, then at rest
+     after it arrives. */
+  #blinds-overlay[data-phase='enter'] .blinds-strip {
+    animation: blinds-enter var(--strip-duration, 0.1s) ease-out both;
+    animation-delay: var(--enter-delay, 0s);
+  }
+
+  /* Exit: strips cascade out in a wave (staggered delays, FIFO). */
+  #blinds-overlay[data-phase='exit'] .blinds-strip {
+    animation: blinds-exit var(--strip-duration, 0.1s) ease-in both;
+    animation-delay: var(--exit-delay, 0s);
+  }
+
+  @keyframes blinds-enter {
+    from {
+      translate: var(--enter-x) var(--enter-y);
+    }
+    to {
+      translate: var(--rest-x) var(--rest-y);
+    }
+  }
+
+  @keyframes blinds-exit {
+    from {
+      translate: var(--rest-x) var(--rest-y);
+    }
+    to {
+      translate: var(--exit-x) var(--exit-y);
+    }
   }
 
   .blinds-strip:nth-child(1) { background-color: var(--c-blue); }
