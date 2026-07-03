@@ -1,19 +1,32 @@
 ---
 /**
  * Persistent animated background layer.
+ * - BRICKBG.png full-screen backdrop (behind everything).
  * - CSS-tiled seamless pattern (served from /pattern/ for exact pixel tiling).
  * - Slow drift via @keyframes (shifts exactly one tile → seamless loop).
  * - Two neon radial-gradient overlays with slow pulse.
  * - transition:persist keeps it continuous across route changes (the "seamless" trick).
  * No video assets — pure CSS animation.
  */
+import brickBg from '../../../Assets/GRAPHICS/BRICKBG.png';
 ---
 
+<div class="brick-bg" style={`background-image: url(${brickBg.src})`} aria-hidden="true"></div>
 <div class="pattern-bg" aria-hidden="true"></div>
 <div class="glow glow-blue" aria-hidden="true"></div>
 <div class="glow glow-pink" aria-hidden="true"></div>
 
 <style>
+  .brick-bg {
+    position: fixed;
+    inset: 0;
+    z-index: -3;
+    background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat;
+    pointer-events: none;
+  }
+
   .pattern-bg {
     position: fixed;
     inset: 0;
