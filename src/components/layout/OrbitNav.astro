@@ -22,8 +22,10 @@ const n = others.length;
 
 interface Props {
   target?: string;
+  mobileTarget?: string;
+  anchorCorner?: 'top-right';
 }
-const { target }: Props = Astro.props;
+const { target, mobileTarget, anchorCorner }: Props = Astro.props;
 ---
 
 {n > 0 && (
@@ -33,6 +35,8 @@ const { target }: Props = Astro.props;
     style={`--n:${n}`}
     data-orbit-nav
     data-orbit-target={target ?? ''}
+    data-orbit-target-mobile={mobileTarget ?? ''}
+    data-orbit-anchor-corner={anchorCorner ?? ''}
   >
     {
       others.map((s, i) => (
@@ -194,27 +198,62 @@ const { target }: Props = Astro.props;
 
     const nav = document.querySelector<HTMLElement>('[data-orbit-nav]');
     if (!nav) return;
-    const sel = nav.getAttribute('data-orbit-target') || '';
-    const target = sel ? document.querySelector<HTMLElement>(sel) : null;
+    const mobileSel = nav.getAttribute('data-orbit-target-mobile') || '';
+    const desktopSel = nav.getAttribute('data-orbit-target') || '';
+
+    const resolveTarget = (): HTMLElement | null => {
+      const isMobile = window.matchMedia('(max-width: 767px)').matches;
+      const sel = (isMobile && mobileSel) || desktopSel;
+      return sel ? document.querySelector<HTMLElement>(sel) : null;
+    };
 
     // No target selector: orbit the viewport center as a graceful fallback
     // so the nav still renders on pages that didn't declare a target.
     const position = (): void => {
+      const target = resolveTarget();
       if (target) {
         const r = target.getBoundingClientRect();
         if (r.width === 0 && r.height === 0) {
           nav.style.visibility = 'hidden';
           return;
         }
-        nav.style.left = r.left + r.width / 2 + 'px';
-        nav.style.top = r.top + r.height / 2 + 'px';
+        const anchorCorner = nav.getAttribute('data-orbit-anchor-corner');
+        const isMobile = window.matchMedia('(max-width: 767px)').matches;
+        if (anchorCorner === 'top-right') {
+          nav.style.left = r.right + 'px';
+          // On mobile, offset upward by the sphere size so it sits above the
+          // card instead of overlapping the title.
+          nav.style.top = (r.top - (isMobile ? 56 : 0)) + 'px';
+        } else {
+          nav.style.left = r.left + r.width / 2 + 'px';
+          nav.style.top = r.top + r.height / 2 + 'px';
+        }
+        // When anchored to a corner, the sphere sits AT the anchor point
+        // (no orbit radius) so it doesn't drift off-screen on small viewports.
+        if (anchorCorner) {
+          nav.style.setProperty('--r', '0px');
+        } else {
         // Clear the target's half-diagonal + padding so spheres float outside.
         // Tighter on mobile (touch screens), looser on tablet/desktop.
-        const pad = window.matchMedia('(max-width: 767px)').matches ? 8 : 32;
-        nav.style.setProperty(
-          '--r',
-          Math.hypot(r.width, r.height) / 2 + pad + 'px'
-        );
+        // Clamped so a large target (e.g. the about card) never pushes a
+        // sphere off-screen and triggers body scroll.
+        const isMobile = window.matchMedia('(max-width: 767px)').matches;
+        const pad = isMobile ? 8 : 32;
+        // Edge margin so the sphere stays inside the viewport while it drifts.
+        // Smaller on mobile to bring it closer to the edge, but still leaves
+        // room for the float animation (±7px) + a small safety buffer.
+        const edgeMargin = isMobile ? 12 : 56;
+        const maxR = Math.min(window.innerWidth, window.innerHeight) / 2 - edgeMargin;
+        const rVal = Math.min(Math.hypot(r.width, r.height) / 2 + pad, maxR);
+        // On mobile, shift the orbit anchor right so the sphere sits near the
+        // right edge (~viewport width minus the sphere size). Skipped when a
+        // corner anchor is requested (e.g. about page pins to top-left).
+        const orbSize = 56;
+        if (isMobile && !anchorCorner) {
+          nav.style.left = window.innerWidth - orbSize + 'px';
+        }
+        nav.style.setProperty('--r', rVal + 'px');
+        }
       } else {
         nav.style.left = window.innerWidth / 2 + 'px';
         nav.style.top = window.innerHeight / 2 + 'px';
@@ -232,10 +271,15 @@ const { target }: Props = Astro.props;
       passive: true,
       signal,
     });
-    if (target) {
-      resizeObserver = new ResizeObserver(() => schedule(position));
-      resizeObserver.observe(target);
-    }
+    // Observe both potential targets so the nav repositions if either resizes
+    // (e.g. when the active target swaps across the mobile breakpoint).
+    resizeObserver = new ResizeObserver(() => schedule(position));
+    [mobileSel, desktopSel].forEach((sel) => {
+      if (sel) {
+        const el = document.querySelector<HTMLElement>(sel);
+        if (el) resizeObserver!.observe(el);
+      }
+    });
   }
 
   if (

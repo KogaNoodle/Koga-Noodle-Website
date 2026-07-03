@@ -53,7 +53,8 @@ import Stamp from '../brand/Stamp.astro';
 
   @media (max-width: 767px) {
     .about {
-      max-height: calc(100dvh - 8rem);
+      height: 100dvh;
+      align-items: start;
     }
   }
 
@@ -89,15 +90,31 @@ import Stamp from '../brand/Stamp.astro';
     padding: var(--space-12) var(--space-8);
     border-radius: var(--radius-lg);
     animation: card-in 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+
+  @media (max-width: 767px) {
+    .about-card {
+      max-height: 100%;
+    }
   }
 
   .about-card :global(.about-title) {
-    font-size: 1.75em;
+    flex-shrink: 0;
+  }
+
+  @media (max-width: 767px) {
+    .about-card :global(.about-title) {
+      font-size: 1.75em;
+    }
   }
 
   .about-scroll {
-    margin-top: var(--space-6);
-    max-height: calc(100dvh - 18rem);
+    flex: 1;
+    min-height: 0;
+    padding: 1rem 0;
     overflow-y: auto;
     overflow-x: hidden;
     scrollbar-width: thin;
@@ -117,6 +134,12 @@ import Stamp from '../brand/Stamp.astro';
       #000 calc(100% - 2rem),
       transparent 100%
     );
+  }
+
+  @media (max-width: 767px) {
+    .about-scroll {
+      padding: 1rem 1rem 1rem 0;
+    }
   }
 
   .about-scroll::-webkit-scrollbar {

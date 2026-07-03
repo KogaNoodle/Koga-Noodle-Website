@@ -11,12 +11,16 @@ interface Props {
   title?: string;
   description?: string;
   orbitTarget?: string;
+  orbitMobileTarget?: string;
+  orbitAnchorCorner?: 'top-right';
 }
 
 const {
   title = 'Koga Noodle',
   description = 'Personal website of Koga Noodle — creative technologist and noodle enthusiast.',
   orbitTarget,
+  orbitMobileTarget,
+  orbitAnchorCorner,
 } = Astro.props;
 ---
 
@@ -52,7 +56,11 @@ const {
     <IntroOverlay />
     <PatternBackground transition:persist />
     <BlindsTransition />
-    <OrbitNav target={orbitTarget} />
+    <OrbitNav
+      target={orbitTarget}
+      mobileTarget={orbitMobileTarget}
+      anchorCorner={orbitAnchorCorner}
+    />
     <main id="main" transition:name="content">
       <slot />
     </main>
