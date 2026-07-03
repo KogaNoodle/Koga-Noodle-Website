@@ -22,26 +22,35 @@ body {
   display: none;
 }
 
-::view-transition-group(content) {
-  perspective: 1400px;
-}
-
 @media (prefers-reduced-motion: reduce) {
   /* Re-enable a short opacity crossfade on the content pseudos for reduced
      motion; the blinds overlay stays hidden (JS early-return + the
-     component's #blinds-overlay { display: none !important } guard). */
+     component's #blinds-overlay { display: none !important } guard). Old
+     content fades out while new content fades in → a true crossfade. */
   ::view-transition-old(root),
   ::view-transition-new(root) {
     display: revert;
     animation: none;
   }
-  ::view-transition-old(content),
+  ::view-transition-old(content) {
+    display: revert;
+    animation: koga-page-fade-out 0.25s ease both;
+  }
   ::view-transition-new(content) {
     display: revert;
-    animation: koga-page-fade 0.25s ease both;
+    animation: koga-page-fade-in 0.25s ease both;
   }
 
-  @keyframes koga-page-fade {
+  @keyframes koga-page-fade-out {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+
+  @keyframes koga-page-fade-in {
     from {
       opacity: 0;
     }

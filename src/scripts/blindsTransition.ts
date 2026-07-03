@@ -1,20 +1,21 @@
 import gsap from 'gsap';
 import { computeGeometry, type StripGeometry, type Viewport } from './blindsGeometry';
 
-const PER_STRIP = 0.42;     // seconds per strip slide
+const PER_STRIP = 0.10;     // seconds per strip slide (9 sequential + wave ≈ 1.64s total)
 const EXIT_STAGGER = 0.08;  // seconds between strips on the exit wave
 const ROOT2 = Math.SQRT2;
 
 let active: gsap.core.Timeline | null = null;
 
+/** Layout viewport the fixed overlay actually covers. `clientWidth/Height`
+ *  excludes any scrollbar gutter, matching a `position: fixed; inset: 0`
+ *  overlay. Used for BOTH geometry (computeGeometry) and strip placement so
+ *  the two never diverge. */
 function viewport(): Viewport {
-  return { w: window.innerWidth, h: window.innerHeight };
-}
-
-/** Layout viewport the fixed overlay actually covers (excludes the scrollbar
- *  gutter on the width axis; innerHeight has no horizontal scrollbar). */
-function base(): { w: number; h: number } {
-  return { w: document.documentElement.clientWidth, h: window.innerHeight };
+  return {
+    w: document.documentElement.clientWidth,
+    h: document.documentElement.clientHeight,
+  };
 }
 
 /** Screen x/y delta (from overlay-center) that places a strip's CENTER at the
@@ -103,9 +104,9 @@ export function runBlindsTransition(): void {
     active?.kill();
     active = null;
 
-    const geom = computeGeometry(viewport());
-    const b = base();
-    const evt = event as unknown as { swap: () => void };
+    const b = viewport();
+    const geom = computeGeometry(b);
+    const evt = event as unknown as { swap: () => void | Promise<void> };
     const originalSwap = evt.swap;
 
     evt.swap = async () => {
@@ -113,8 +114,8 @@ export function runBlindsTransition(): void {
       overlay.style.visibility = 'visible';
       // 1. Cover (sequential entry).
       await playEntry(strips, geom, b);
-      // 2. Swap under full cover.
-      originalSwap();
+      // 2. Swap under full cover (await in case Astro ever makes it async).
+      await originalSwap();
       // 3. Wave out.
       await playExit(strips, geom, b);
       overlay.style.visibility = 'hidden';
