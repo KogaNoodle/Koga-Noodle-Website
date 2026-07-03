@@ -8,22 +8,33 @@ import Stamp from '../brand/Stamp.astro';
     <Stamp size={280} />
   </div>
   <article class="about-card frosted">
-    <SectionHeading text="ABOUT" />
+    <SectionHeading text="Hello! I'm Marcos Koga!" />
     <div class="about-body">
       <p>
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod
-        tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim
-        veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea
-        commodo consequat.
+        Also known as Koga Noodle, your friendly Brazilian noodle dragon, and
+        welcome to my corner of the internet!
       </p>
       <p>
-        Duis aute irure dolor in reprehenderit in voluptate velit esse cillum
-        dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
-        proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+        I'm a frontend developer with about two decades of experience under my
+        belt, a variety streamer, and a creative explorer. I have always been
+        driven by a need to express myself through different mediums, from
+        drawing and dancing to my most recent passions: singing and 3D modeling
+        in Blender.
       </p>
       <p>
-        Real bio coming soon — replace this placeholder with your story.
+        Streaming is one of my favorite forms of expression because I can blend
+        my professional background with my content, building custom and
+        interactive tools that allow my chat to engage with the stream in unique
+        ways. Whether I'm diving into variety gaming, hanging out for a chill
+        chat, or doing live development and experimentation, there's always
+        something new happening here.
       </p>
+      <p>
+        When this noodle dragon leaves his cave, it's usually to travel with
+        friends and visit them at big community events. I love hitting up
+        conventions like FWA, Anthrocon, Midwest FurFest, and others.
+      </p>
+      <p class="rainbow-text">Thanks for stopping by!</p>
     </div>
   </article>
 </section>
@@ -31,7 +42,7 @@ import Stamp from '../brand/Stamp.astro';
 <style>
   .about {
     position: relative;
-    min-height: 78vh;
+    min-height: 100svh;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -76,11 +87,11 @@ import Stamp from '../brand/Stamp.astro';
     gap: var(--space-4);
     margin-top: var(--space-6);
     color: var(--ink-muted);
-    font-size: var(--step-0);
+    font-size: var(--font-size-base);
     line-height: 1.8;
   }
 
-  .about-body p:last-child {
+  .about-body p:last-child:not(.rainbow-text) {
     color: var(--ink);
     font-style: italic;
     opacity: 0.7;

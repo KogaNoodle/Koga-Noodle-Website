@@ -87,6 +87,21 @@
     var(--c-violet)
   );
 
+  /* Seamless-loop rainbow for animated text (ends where it starts) */
+  --rainbow-gradient-loop: linear-gradient(
+    90deg,
+    var(--c-blue),
+    var(--c-cyan),
+    var(--c-mint),
+    var(--c-green),
+    var(--c-yellow),
+    var(--c-peach),
+    var(--c-salmon),
+    var(--c-pink),
+    var(--c-violet),
+    var(--c-blue)
+  );
+
   /* Neutrals (inferred - to be confirmed) */
   --bg: #0e0e12;
   --surface: #16161d;
@@ -113,14 +128,11 @@
   --radius-pill: 999px;
 
   /* Fluid type scale */
-  --step--1: clamp(0.83rem, 0.78rem + 0.22vw, 1rem);
-  --step-0: clamp(1rem, 0.94rem + 0.33vw, 1.25rem);
-  --step-1: clamp(1.2rem, 1.12rem + 0.4vw, 1.5rem);
-  --step-2: clamp(1.44rem, 1.34rem + 0.48vw, 1.8rem);
-  --step-3: clamp(1.73rem, 1.6rem + 0.58vw, 2.16rem);
-  --step-4: clamp(2.07rem, 1.91rem + 0.7vw, 2.59rem);
-  --step-5: clamp(2.49rem, 2.29rem + 0.83vw, 3.11rem);
-  --step-6: clamp(2.99rem, 2.74rem + 1vw, 3.74rem);
+  --font-size-sm: clamp(0.83rem, 0.78rem + 0.22vw, 1rem);
+  --font-size-base: clamp(1rem, 0.94rem + 0.33vw, 1.25rem);
+  --font-size-lg: clamp(1.2rem, 1.12rem + 0.4vw, 1.5rem);
+  --font-size-xl: clamp(1.44rem, 1.34rem + 0.48vw, 1.8rem);
+  --font-size-2xl: clamp(1.73rem, 1.6rem + 0.58vw, 2.16rem);
 
   /* Layout */
   --max-w: 72rem;
@@ -216,11 +228,24 @@ button {
 }
 
 .rainbow-text {
-  background: var(--rainbow-gradient);
+  background: var(--rainbow-gradient-loop);
+  background-size: 200% 100%;
   background-clip: text;
   -webkit-background-clip: text;
   color: transparent;
   -webkit-text-fill-color: transparent;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .rainbow-text {
+    animation: rainbow-shimmer 6s linear infinite;
+  }
+}
+
+@keyframes rainbow-shimmer {
+  to {
+    background-position: 200% 0;
+  }
 }
 
 .neon-glow {
