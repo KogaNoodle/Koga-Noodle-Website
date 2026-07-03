@@ -1,0 +1,66 @@
+---
+/**
+ * Rainbow blinds route-transition overlay.
+ * transition:persist keeps it mounted across swaps so the GSAP timeline
+ * in blindsTransition.ts is never interrupted by a DOM replacement.
+ * Colors are applied via :nth-child against the brand tokens in tokens.css.
+ */
+---
+<div id="blinds-overlay" aria-hidden="true" hidden transition:persist>
+  <div class="blinds-strip" data-strip="0"></div>
+  <div class="blinds-strip" data-strip="1"></div>
+  <div class="blinds-strip" data-strip="2"></div>
+  <div class="blinds-strip" data-strip="3"></div>
+  <div class="blinds-strip" data-strip="4"></div>
+  <div class="blinds-strip" data-strip="5"></div>
+  <div class="blinds-strip" data-strip="6"></div>
+  <div class="blinds-strip" data-strip="7"></div>
+  <div class="blinds-strip" data-strip="8"></div>
+</div>
+
+<style>
+  #blinds-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9998; /* under the intro splash (9999) so first-load intro still wins */
+    overflow: hidden;
+    pointer-events: none;
+    visibility: hidden; /* shown only while a transition is running (set via JS) */
+  }
+
+  #blinds-overlay[hidden] {
+    display: none;
+  }
+
+  .blinds-strip {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100%;
+    height: 100%;
+    transform-origin: center center;
+    will-change: transform;
+    /* Size + position are fully driven by GSAP from computeGeometry(): the box
+       is scaled to length×thickness, rotated -45° (long axis → top-right↔bottom-
+       left, perpendicular to the TL→BR slide axis), then translated so its
+       center sits at the computed slide-axis position. */
+  }
+
+  .blinds-strip:nth-child(1) { background-color: var(--c-blue); }
+  .blinds-strip:nth-child(2) { background-color: var(--c-cyan); }
+  .blinds-strip:nth-child(3) { background-color: var(--c-mint); }
+  .blinds-strip:nth-child(4) { background-color: var(--c-green); }
+  .blinds-strip:nth-child(5) { background-color: var(--c-yellow); }
+  .blinds-strip:nth-child(6) { background-color: var(--c-peach); }
+  .blinds-strip:nth-child(7) { background-color: var(--c-salmon); }
+  .blinds-strip:nth-child(8) { background-color: var(--c-pink); }
+  .blinds-strip:nth-child(9) { background-color: var(--c-violet); }
+
+  @media (prefers-reduced-motion: reduce) {
+    /* Belt-and-suspenders: JS also early-returns under reduced motion, but keep
+       the overlay fully hidden so no stray strip ever paints. */
+    #blinds-overlay {
+      display: none !important;
+    }
+  }
+</style>
