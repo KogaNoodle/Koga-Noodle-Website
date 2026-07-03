@@ -16,12 +16,15 @@ interface Props {
 }
 
 const {
-  title = 'Koga Noodle',
-  description = 'Personal website of Koga Noodle — creative technologist and noodle enthusiast.',
+  title = 'Marcos Koga (Koga Noodle)',
+  description = "The personal corner of Marcos Koga, a Brazilian noodle dragon who codes, designs, and slurps down side projects for fun.",
   orbitTarget,
   orbitMobileTarget,
   orbitAnchorCorner,
 } = Astro.props;
+
+const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://koga.gay');
+const ogImage = new URL('/og-image.jpg', Astro.site ?? 'https://koga.gay');
 ---
 
 <!doctype html>
@@ -33,6 +36,22 @@ const {
     <title>{title}</title>
     <meta name="description" content={description} />
     <meta name="color-scheme" content="dark" />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" href="/favicon.ico" sizes="48x48" />
+    <link rel="icon" href="/favicon-32x32.png" sizes="32x32" type="image/png" />
+    <link rel="icon" href="/favicon-16x16.png" sizes="16x16" type="image/png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Marcos Koga (Koga Noodle)" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:url" content={canonical} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
     <ClientRouter />
     <script is:inline>
       // Show the intro splash on every FULL page load (reload / direct URL /
