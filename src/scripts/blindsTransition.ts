@@ -76,24 +76,63 @@ function playExit(
   });
 }
 
-export async function runBlindsCycle(overlay: HTMLElement): Promise<void> {
-  const strips = Array.from(overlay.querySelectorAll<HTMLElement>('.blinds-strip'));
-  const geom = computeGeometry(viewport());
-  const b = base();
-  overlay.hidden = false;
-  overlay.style.visibility = 'visible';
-  await playEntry(strips, geom, b);
-  await playExit(strips, geom, b);
-  overlay.style.visibility = 'hidden';
-  overlay.hidden = true;
-  active = null;
-}
-
-// DEBUG HOOK (temporary, replaced in Task 5): trigger from devtools console via
-// window.__kogaBlindsDebug() to validate the visual before wiring the swap.
+/**
+ * Rainbow blinds route transition. Takes over Astro's `astro:before-swap`:
+ * strips cover the viewport (entry), the DOM swaps under full cover, then the
+ * strips cascade out (exit wave). Native View Transitions pseudos are
+ * neutralized via CSS so they never render over the overlay.
+ */
 export function runBlindsTransition(): void {
-  (window as unknown as { __kogaBlindsDebug?: () => void }).__kogaBlindsDebug = () => {
+  const w = window as unknown as { __kogaBlindsBound?: boolean };
+  if (w.__kogaBlindsBound) return;
+  w.__kogaBlindsBound = true;
+
+  const reduce = (): boolean =>
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  document.addEventListener('astro:before-swap', (event) => {
+    if (reduce()) return; // let Astro's reduced-motion VT handle it
+    if (document.documentElement.classList.contains('intro-active')) return;
+
     const overlay = document.getElementById('blinds-overlay');
-    if (overlay) void runBlindsCycle(overlay);
-  };
+    if (!overlay) return;
+    const strips = Array.from(overlay.querySelectorAll<HTMLElement>('.blinds-strip'));
+    if (!strips.length) return;
+
+    // Kill any in-flight transition (rapid re-navigation).
+    active?.kill();
+    active = null;
+
+    const geom = computeGeometry(viewport());
+    const b = base();
+    const evt = event as unknown as { swap: () => void };
+    const originalSwap = evt.swap;
+
+    evt.swap = async () => {
+      overlay.hidden = false;
+      overlay.style.visibility = 'visible';
+      // 1. Cover (sequential entry).
+      await playEntry(strips, geom, b);
+      // 2. Swap under full cover.
+      originalSwap();
+      // 3. Wave out.
+      await playExit(strips, geom, b);
+      overlay.style.visibility = 'hidden';
+      overlay.hidden = true;
+      active = null;
+    };
+  });
+
+  // Failsafe: never leave the overlay stuck open.
+  document.addEventListener('astro:after-swap', () => {
+    const overlay = document.getElementById('blinds-overlay');
+    if (!overlay || overlay.hidden) return;
+    window.setTimeout(() => {
+      if (!overlay.hidden) {
+        active?.kill();
+        overlay.style.visibility = 'hidden';
+        overlay.hidden = true;
+      }
+    }, 4000);
+  });
 }

@@ -1,67 +1,43 @@
 /* ============================================================
-   Game-like 3D route transitions (View Transitions API)
-   The main content area turns in 3D space while the persisted
-   pattern background stays continuous.
+   Rainbow blinds route transitions
+   The visual is driven entirely by the BlindsTransition overlay +
+   blindsTransition.ts (GSAP). The native View Transitions pseudos
+   are neutralized so they never render over the blinds overlay.
    ============================================================ */
 
 :root {
   perspective: 1400px;
 }
 
-/* `perspective` applies to direct children only — set on body so the fixed
-   intro overlay (a body child) renders its rotateY/rotateX exit in 3D. */
 body {
   perspective: 1400px;
 }
 
-/* Disable the default root crossfade so only the named content
-   transition plays (the persisted background is excluded entirely). */
+/* Neutralize native VT pseudos — the blinds overlay is the sole visual. */
 ::view-transition-old(root),
-::view-transition-new(root) {
+::view-transition-new(root),
+::view-transition-old(content),
+::view-transition-new(content) {
   animation: none;
+  display: none;
 }
 
 ::view-transition-group(content) {
   perspective: 1400px;
 }
 
-::view-transition-old(content) {
-  animation: koga-page-out 0.7s cubic-bezier(0.76, 0, 0.24, 1) both;
-}
-
-::view-transition-new(content) {
-  animation: koga-page-in 0.7s cubic-bezier(0.76, 0, 0.24, 1) both;
-}
-
-@keyframes koga-page-out {
-  0% {
-    transform: translateZ(0) rotateY(0deg) scale(1);
-    opacity: 1;
-    filter: blur(0px);
-  }
-  100% {
-    transform: translateZ(-640px) rotateY(-44deg) scale(0.88);
-    opacity: 0;
-    filter: blur(14px);
-  }
-}
-
-@keyframes koga-page-in {
-  0% {
-    transform: translateZ(-640px) rotateY(44deg) scale(0.88);
-    opacity: 0;
-    filter: blur(14px);
-  }
-  100% {
-    transform: translateZ(0) rotateY(0deg) scale(1);
-    opacity: 1;
-    filter: blur(0px);
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
+  /* Re-enable a short opacity crossfade on the content pseudos for reduced
+     motion; the blinds overlay stays hidden (JS early-return + the
+     component's #blinds-overlay { display: none !important } guard). */
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    display: revert;
+    animation: none;
+  }
   ::view-transition-old(content),
   ::view-transition-new(content) {
+    display: revert;
     animation: koga-page-fade 0.25s ease both;
   }
 
