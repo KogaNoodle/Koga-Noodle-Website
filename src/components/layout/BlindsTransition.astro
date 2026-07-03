@@ -1,0 +1,108 @@
+---
+/**
+ * Rainbow blinds route-transition overlay.
+ * transition:persist keeps it mounted across swaps so the CSS animations
+ * in blindsTransition.ts are never interrupted by a DOM replacement.
+ * Colors are applied via :nth-child against the brand tokens in tokens.css.
+ */
+---
+<div id="blinds-overlay" aria-hidden="true" hidden transition:persist>
+  <div class="blinds-strip" data-strip="0" style="--i:0"></div>
+  <div class="blinds-strip" data-strip="1" style="--i:1"></div>
+  <div class="blinds-strip" data-strip="2" style="--i:2"></div>
+  <div class="blinds-strip" data-strip="3" style="--i:3"></div>
+  <div class="blinds-strip" data-strip="4" style="--i:4"></div>
+  <div class="blinds-strip" data-strip="5" style="--i:5"></div>
+  <div class="blinds-strip" data-strip="6" style="--i:6"></div>
+  <div class="blinds-strip" data-strip="7" style="--i:7"></div>
+  <div class="blinds-strip" data-strip="8" style="--i:8"></div>
+</div>
+
+<style>
+  #blinds-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9998; /* under the intro splash (9999) so first-load intro still wins */
+    overflow: hidden;
+    pointer-events: none;
+    visibility: hidden; /* shown only while a transition is running (set via JS) */
+  }
+
+  #blinds-overlay[hidden] {
+    display: none;
+  }
+
+  .blinds-strip {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: var(--length, 0px);
+    height: var(--thickness, 0px);
+    transform: rotate(-45deg); /* static — long axis → top-right↔bottom-left */
+    transform-origin: center center;
+    will-change: translate;
+    /* The CSS `translate` property is animated by the keyframes below. It is
+       applied BEFORE `transform` in the rendering pipeline, so the element
+       is positioned in screen space, then rotated around its center. */
+  }
+
+  /* Z-index is set via JS inline styles per phase (see blindsTransition.ts).
+     Entry: strip 0 (blue) on top — later strips slide in behind.
+     Exit: reversed — strip 0 at bottom, exits first from under the others. */
+
+  /* Entry: strips slide in sequentially (animation-delay staggered per strip).
+     fill-mode: both holds each strip offscreen during its delay, then at rest
+     after it arrives. ease-out-expo: sharp deceleration, strips snap into place. */
+  #blinds-overlay[data-phase='enter'] .blinds-strip {
+    animation: blinds-enter var(--strip-duration, 0.1s) cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation-delay: var(--enter-delay, 0s);
+  }
+
+  /* Exit: strips cascade out in a wave (staggered delays, FIFO).
+     ease-in-expo: sharp acceleration, strips shoot offscreen. */
+  #blinds-overlay[data-phase='exit'] .blinds-strip {
+    animation: blinds-exit var(--strip-duration, 0.1s) cubic-bezier(0.7, 0, 0.84, 0) both;
+    animation-delay: var(--exit-delay, 0s);
+  }
+
+  @keyframes blinds-enter {
+    from {
+      translate: var(--enter-x) var(--enter-y);
+    }
+    to {
+      translate: var(--rest-x) var(--rest-y);
+    }
+  }
+
+  @keyframes blinds-exit {
+    from {
+      translate: var(--rest-x) var(--rest-y);
+    }
+    to {
+      translate: var(--exit-x) var(--exit-y);
+    }
+  }
+
+  .blinds-strip:nth-child(1) { background-color: var(--c-blue); }
+  .blinds-strip:nth-child(2) { background-color: var(--c-cyan); }
+  .blinds-strip:nth-child(3) { background-color: var(--c-mint); }
+  .blinds-strip:nth-child(4) { background-color: var(--c-green); }
+  .blinds-strip:nth-child(5) { background-color: var(--c-yellow); }
+  .blinds-strip:nth-child(6) { background-color: var(--c-peach); }
+  .blinds-strip:nth-child(7) { background-color: var(--c-salmon); }
+  .blinds-strip:nth-child(8) { background-color: var(--c-pink); }
+  .blinds-strip:nth-child(9) { background-color: var(--c-violet); }
+
+  @media (prefers-reduced-motion: reduce) {
+    /* Belt-and-suspenders: JS also early-returns under reduced motion, but keep
+       the overlay fully hidden so no stray strip ever paints. */
+    #blinds-overlay {
+      display: none !important;
+    }
+  }
+</style>
+
+<script>
+  import { runBlindsTransition } from '../../scripts/blindsTransition';
+  runBlindsTransition();
+</script>

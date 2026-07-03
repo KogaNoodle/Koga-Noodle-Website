@@ -1,71 +1,49 @@
 /* ============================================================
-   Game-like 3D route transitions (View Transitions API)
-   The main content area turns in 3D space while the persisted
-   pattern background stays continuous.
+   Rainbow blinds route transitions (CSS-driven, VT skipped)
+   The blinds overlay (BlindsTransition.astro) is the sole visual
+   for click navigation. The native View Transition is skipped via
+   viewTransition.skipTransition() in blindsTransition.ts so the live
+   DOM (and the overlay) stay visible throughout. These rules only
+   apply for reduced-motion (where blinds are disabled) or as a
+   safety net if the VT runs unexpectedly.
    ============================================================ */
 
 :root {
   perspective: 1400px;
 }
 
-/* `perspective` applies to direct children only — set on body so the fixed
-   intro overlay (a body child) renders its rotateY/rotateX exit in 3D. */
 body {
   perspective: 1400px;
 }
 
-/* Disable the default root crossfade so only the named content
-   transition plays (the persisted background is excluded entirely). */
+/* Safety net: if the VT runs (JS didn't skip it), neutralize the old 3D
+   animation so there's no ugly rotateY. The old page shows statically. */
 ::view-transition-old(root),
-::view-transition-new(root) {
+::view-transition-new(root),
+::view-transition-old(content),
+::view-transition-new(content) {
   animation: none;
 }
 
-::view-transition-group(content) {
-  perspective: 1400px;
-}
-
-::view-transition-old(content) {
-  animation: koga-page-out 0.7s cubic-bezier(0.76, 0, 0.24, 1) both;
-}
-
-::view-transition-new(content) {
-  animation: koga-page-in 0.7s cubic-bezier(0.76, 0, 0.24, 1) both;
-}
-
-@keyframes koga-page-out {
-  0% {
-    transform: translateZ(0) rotateY(0deg) scale(1);
-    opacity: 1;
-    filter: blur(0px);
-  }
-  100% {
-    transform: translateZ(-640px) rotateY(-44deg) scale(0.88);
-    opacity: 0;
-    filter: blur(14px);
-  }
-}
-
-@keyframes koga-page-in {
-  0% {
-    transform: translateZ(-640px) rotateY(44deg) scale(0.88);
-    opacity: 0;
-    filter: blur(14px);
-  }
-  100% {
-    transform: translateZ(0) rotateY(0deg) scale(1);
-    opacity: 1;
-    filter: blur(0px);
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  ::view-transition-old(content),
+  /* Simple opacity crossfade for reduced motion (blinds disabled). */
+  ::view-transition-old(content) {
+    animation: koga-fade-out 0.25s ease both;
+  }
   ::view-transition-new(content) {
-    animation: koga-page-fade 0.25s ease both;
+    animation: koga-fade-in 0.25s ease both;
   }
 
-  @keyframes koga-page-fade {
+  @keyframes koga-fade-out {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+
+  @keyframes koga-fade-in {
     from {
       opacity: 0;
     }
