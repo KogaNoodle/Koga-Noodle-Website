@@ -121,8 +121,8 @@ const { target }: Props = Astro.props;
   .sphere-orb {
     display: grid;
     place-items: center;
-    width: 72px;
-    height: 72px;
+    width: 56px;
+    height: 56px;
     border-radius: 50%;
     background:
       radial-gradient(
@@ -209,9 +209,11 @@ const { target }: Props = Astro.props;
         nav.style.left = r.left + r.width / 2 + 'px';
         nav.style.top = r.top + r.height / 2 + 'px';
         // Clear the target's half-diagonal + padding so spheres float outside.
+        // Tighter on mobile (touch screens), looser on tablet/desktop.
+        const pad = window.matchMedia('(max-width: 767px)').matches ? 8 : 32;
         nav.style.setProperty(
           '--r',
-          Math.hypot(r.width, r.height) / 2 + 64 + 'px'
+          Math.hypot(r.width, r.height) / 2 + pad + 'px'
         );
       } else {
         nav.style.left = window.innerWidth / 2 + 'px';

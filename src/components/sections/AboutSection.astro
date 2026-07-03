@@ -8,33 +8,35 @@ import Stamp from '../brand/Stamp.astro';
     <Stamp size={280} />
   </div>
   <article class="about-card frosted">
-    <SectionHeading text="Hello! I'm Marcos Koga!" />
-    <div class="about-body">
-      <p>
-        Also known as Koga Noodle, your friendly Brazilian noodle dragon, and
-        welcome to my corner of the internet!
-      </p>
-      <p>
-        I'm a frontend developer with about two decades of experience under my
-        belt, a variety streamer, and a creative explorer. I have always been
-        driven by a need to express myself through different mediums, from
-        drawing and dancing to my most recent passions: singing and 3D modeling
-        in Blender.
-      </p>
-      <p>
-        Streaming is one of my favorite forms of expression because I can blend
-        my professional background with my content, building custom and
-        interactive tools that allow my chat to engage with the stream in unique
-        ways. Whether I'm diving into variety gaming, hanging out for a chill
-        chat, or doing live development and experimentation, there's always
-        something new happening here.
-      </p>
-      <p>
-        When this noodle dragon leaves his cave, it's usually to travel with
-        friends and visit them at big community events. I love hitting up
-        conventions like FWA, Anthrocon, Midwest FurFest, and others.
-      </p>
-      <p class="rainbow-text">Thanks for stopping by!</p>
+    <SectionHeading text="Hello! I'm Marcos Koga!" class="about-title" />
+    <div class="about-scroll">
+      <div class="about-body">
+        <p>
+          Also known as Koga Noodle, your friendly Brazilian noodle dragon, and
+          welcome to my corner of the internet!
+        </p>
+        <p>
+          I'm a frontend developer with about two decades of experience under my
+          belt, a variety streamer, and a creative explorer. I have always been
+          driven by a need to express myself through different mediums, from
+          drawing and dancing to my most recent passions: singing and 3D modeling
+          in Blender.
+        </p>
+        <p>
+          Streaming is one of my favorite forms of expression because I can blend
+          my professional background with my content, building custom and
+          interactive tools that allow my chat to engage with the stream in unique
+          ways. Whether I'm diving into variety gaming, hanging out for a chill
+          chat, or doing live development and experimentation, there's always
+          something new happening here.
+        </p>
+        <p>
+          When this noodle dragon leaves his cave, it's usually to travel with
+          friends and visit them at big community events. I love hitting up
+          conventions like FWA, Anthrocon, Midwest FurFest, and others.
+        </p>
+        <p class="rainbow-text">Thanks for stopping by!</p>
+      </div>
     </div>
   </article>
 </section>
@@ -49,12 +51,19 @@ import Stamp from '../brand/Stamp.astro';
     padding-block: var(--space-16);
   }
 
+  @media (max-width: 767px) {
+    .about {
+      max-height: calc(100dvh - 8rem);
+    }
+  }
+
   .about-stamp-wrap {
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
     width: 280px;
+    max-width: calc(100% - 5rem);
     opacity: 0.08;
     pointer-events: none;
     z-index: 0;
@@ -75,17 +84,62 @@ import Stamp from '../brand/Stamp.astro';
     position: relative;
     z-index: 1;
     width: 100%;
-    max-width: 48rem;
+    max-width: calc(48rem - 5rem);
+    max-height: calc(100% - 5rem);
     padding: var(--space-12) var(--space-8);
     border-radius: var(--radius-lg);
     animation: card-in 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both;
+  }
+
+  .about-card :global(.about-title) {
+    font-size: 1.75em;
+  }
+
+  .about-scroll {
+    margin-top: var(--space-6);
+    max-height: calc(100dvh - 18rem);
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.5) transparent;
+    /* Gradient fade mask at top and bottom edges. */
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      transparent 0,
+      #000 2rem,
+      #000 calc(100% - 2rem),
+      transparent 100%
+    );
+    mask-image: linear-gradient(
+      to bottom,
+      transparent 0,
+      #000 2rem,
+      #000 calc(100% - 2rem),
+      transparent 100%
+    );
+  }
+
+  .about-scroll::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .about-scroll::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .about-scroll::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: var(--radius-pill);
+  }
+
+  .about-scroll::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.7);
   }
 
   .about-body {
     display: flex;
     flex-direction: column;
     gap: var(--space-4);
-    margin-top: var(--space-6);
     color: var(--ink-muted);
     font-size: var(--font-size-base);
     line-height: 1.8;

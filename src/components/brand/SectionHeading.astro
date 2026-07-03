@@ -3,12 +3,16 @@ interface Props {
   text: string;
   font?: 'display' | 'art';
   as?: 'h1' | 'h2' | 'h3';
+  class?: string;
 }
 
-const { text, font = 'display', as: Tag = 'h1' }: Props = Astro.props;
+const { text, font = 'display', as: Tag = 'h1', class: className }: Props =
+  Astro.props;
 ---
 
-<Tag class={`section-heading section-heading--${font}`}>{text}</Tag>
+<Tag class={`section-heading section-heading--${font}${className ? ' ' + className : ''}`}>
+  {text}
+</Tag>
 
 <style>
   .section-heading {

@@ -57,8 +57,14 @@ import Stamp from '../brand/Stamp.astro';
   .intro-logo {
     position: relative;
     z-index: 1;
+    max-width: calc(100% - 2rem);
     transform-style: preserve-3d;
     animation: logo-pulse 2.6s ease-in-out infinite;
+  }
+
+  .intro-logo :global(img) {
+    max-width: 100%;
+    height: auto;
   }
 
   @keyframes logo-pulse {

@@ -3,7 +3,6 @@ import '../styles/tokens.css';
 import '../styles/transitions.css';
 import { ClientRouter } from 'astro:transitions';
 import PatternBackground from '../components/brand/PatternBackground.astro';
-import MainMenu from '../components/layout/MainMenu.astro';
 import OrbitNav from '../components/layout/OrbitNav.astro';
 import BlindsTransition from '../components/layout/BlindsTransition.astro';
 import IntroOverlay from '../components/intro/IntroOverlay.astro';
@@ -53,7 +52,6 @@ const {
     <IntroOverlay />
     <PatternBackground transition:persist />
     <BlindsTransition />
-    <MainMenu />
     <OrbitNav target={orbitTarget} />
     <main id="main" transition:name="content">
       <slot />
