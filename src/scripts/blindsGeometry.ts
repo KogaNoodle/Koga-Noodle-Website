@@ -32,8 +32,9 @@ export function computeGeometry(
   const travel = extent + margin + thickness; // uniform offscreen travel (clears both ends)
 
   const out: StripGeometry[] = [];
+  const overlap = 1; // px — each strip shifts toward the previous to close gaps
   for (let i = 0; i < n; i++) {
-    const restPos = -margin + thickness / 2 + i * thickness;
+    const restPos = -margin + thickness / 2 + i * (thickness - overlap);
     out.push({
       length,
       thickness,
