@@ -80,6 +80,14 @@ function hideOverlay(): void {
   pendingHref = null;
 }
 
+/** Set z-index per strip for the given phase. Entry: strip 0 on top (later
+ *  strips slide in behind). Exit: reversed (strip 0 at bottom, exits first). */
+function setStripZIndex(strips: HTMLElement[], ph: 'enter' | 'exit'): void {
+  strips.forEach((s, i) => {
+    s.style.zIndex = ph === 'enter' ? String(STRIP_COUNT - i) : String(i + 1);
+  });
+}
+
 function startEntry(href: string): void {
   const overlay = document.getElementById('blinds-overlay');
   if (!overlay) {
@@ -99,6 +107,13 @@ function startEntry(href: string): void {
   overlay.style.setProperty('--strip-duration', `${PER_STRIP}s`);
   overlay.hidden = false;
   overlay.style.visibility = 'visible';
+
+  // Clear any previous phase, force a reflow so the browser restarts the
+  // CSS animations (browsers cache finished animations on persisted elements
+  // and won't restart without a reflow between removal and re-addition).
+  delete overlay.dataset.phase;
+  void overlay.offsetHeight; // force reflow
+  setStripZIndex(strips, 'enter');
   overlay.dataset.phase = 'enter';
   phase = 'enter';
   blindsActive = true;
@@ -122,6 +137,14 @@ function startExit(): void {
     hideOverlay();
     return;
   }
+  const strips = Array.from(
+    overlay.querySelectorAll<HTMLElement>('.blinds-strip')
+  );
+
+  // Force reflow so the exit animations restart cleanly.
+  delete overlay.dataset.phase;
+  void overlay.offsetHeight; // force reflow
+  if (strips.length) setStripZIndex(strips, 'exit');
   overlay.dataset.phase = 'exit';
   phase = 'exit';
   const exitTotal = (STRIP_COUNT - 1) * EXIT_STAGGER + PER_STRIP + 0.15;

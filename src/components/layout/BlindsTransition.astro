@@ -46,19 +46,20 @@
        is positioned in screen space, then rotated around its center. */
   }
 
-  /* Z-index choreography:
-     Entry — strip 0 (blue) on top, strip 8 (violet) at bottom. Later strips
-     slide in BEHIND earlier ones.
-     Exit — reversed: strip 0 at bottom, strip 8 on top. The first strip exits
-     from under the others; the last strip is on top and exits last. */
+  /* Z-index is set via JS inline styles per phase (see blindsTransition.ts).
+     Entry: strip 0 (blue) on top — later strips slide in behind.
+     Exit: reversed — strip 0 at bottom, exits first from under the others. */
+
+  /* Entry: strips slide in sequentially (animation-delay staggered per strip).
+     fill-mode: both holds each strip offscreen during its delay, then at rest
+     after it arrives. */
   #blinds-overlay[data-phase='enter'] .blinds-strip {
-    z-index: calc(9 - var(--i, 0));
     animation: blinds-enter var(--strip-duration, 0.1s) ease-out both;
     animation-delay: var(--enter-delay, 0s);
   }
 
+  /* Exit: strips cascade out in a wave (staggered delays, FIFO). */
   #blinds-overlay[data-phase='exit'] .blinds-strip {
-    z-index: var(--i, 0);
     animation: blinds-exit var(--strip-duration, 0.1s) ease-in both;
     animation-delay: var(--exit-delay, 0s);
   }

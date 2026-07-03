@@ -16,9 +16,11 @@ describe('computeGeometry', () => {
     const extent = (w + h) / ROOT2;
     const margin = 48;
 
-    // Perpendicular coverage: band length spans the viewport diagonal projection.
+    // Perpendicular coverage: band length must reach the farthest corner from
+    // the strip center (v=0), which is max(w,h)/√2, plus overhang.
+    const minLength = Math.max(w, h) * ROOT2;
     for (const s of g) {
-      expect(s.length).toBeGreaterThanOrEqual(extent);
+      expect(s.length).toBeGreaterThanOrEqual(minLength);
       expect(s.thickness).toBeGreaterThan(0);
     }
 

@@ -23,7 +23,12 @@ export function computeGeometry(
   const extent = (vp.w + vp.h) / ROOT2; // viewport span along the 45° slide axis
   const span = extent + 2 * margin;     // total slide span incl. overhang
   const thickness = span / n;
-  const length = extent + 2 * margin;   // long axis incl. overhang
+  // Long axis must reach the farthest corner from the strip's center (v=0).
+  // The farthest corner's perpendicular distance is max(w,h)/√2, so length
+  // must be ≥ max(w,h)*√2. Using that + overhang guarantees full coverage
+  // on any aspect ratio (the old (w+h)/√2+margin left corners uncovered on
+  // wide/tall viewports).
+  const length = Math.max(vp.w, vp.h) * ROOT2 + 2 * margin;
   const travel = extent + margin + thickness; // uniform offscreen travel (clears both ends)
 
   const out: StripGeometry[] = [];
