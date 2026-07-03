@@ -38,12 +38,11 @@
     left: 0;
     width: var(--length, 0px);
     height: var(--thickness, 0px);
-    transform: rotate(-45deg); /* long axis → top-right↔bottom-left (⊥ to slide) */
     transform-origin: center center;
-    will-change: translate;
-    /* `translate` is animated by the keyframes below; `transform: rotate`
-       stays static. The CSS `translate` property is applied before
-       `transform`, so the strip is positioned then rotated around its center. */
+    will-change: transform;
+    /* Size + position are set via CSS custom properties from
+       blindsGeometry.ts. The enter/exit keyframes below animate the
+       `transform` property (translate + rotate) — GPU-accelerated. */
   }
 
   /* Entry: strips slide in sequentially (animation-delay staggered per strip).
@@ -62,19 +61,19 @@
 
   @keyframes blinds-enter {
     from {
-      translate: var(--enter-x) var(--enter-y);
+      transform: translate(var(--enter-x), var(--enter-y)) rotate(-45deg);
     }
     to {
-      translate: var(--rest-x) var(--rest-y);
+      transform: translate(var(--rest-x), var(--rest-y)) rotate(-45deg);
     }
   }
 
   @keyframes blinds-exit {
     from {
-      translate: var(--rest-x) var(--rest-y);
+      transform: translate(var(--rest-x), var(--rest-y)) rotate(-45deg);
     }
     to {
-      translate: var(--exit-x) var(--exit-y);
+      transform: translate(var(--exit-x), var(--exit-y)) rotate(-45deg);
     }
   }
 

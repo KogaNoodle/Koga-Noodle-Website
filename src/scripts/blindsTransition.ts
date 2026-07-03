@@ -1,9 +1,22 @@
-import { computeGeometry, STRIP_COUNT, type StripGeometry, type Viewport } from './blindsGeometry';
+import { navigate } from 'astro:transitions/client';
+import {
+  computeGeometry,
+  STRIP_COUNT,
+  type StripGeometry,
+  type Viewport,
+} from './blindsGeometry';
 
-const PER_STRIP = 0.1;      // seconds per strip slide (must match --strip-duration in CSS)
-const EXIT_STAGGER = 0.08;  // seconds between strips on the exit wave
+const PER_STRIP = 0.1; // seconds per strip slide
+const EXIT_STAGGER = 0.08; // seconds between strips on the exit wave
 const ROOT2 = Math.SQRT2;
-const ENTRY_DURATION = STRIP_COUNT * PER_STRIP; // 0.9s — holds the VT old-page pseudo
+const ENTRY_DURATION = STRIP_COUNT * PER_STRIP; // 0.9s — entry phase total
+
+type Phase = 'enter' | 'exit' | null;
+
+let blindsActive = false;
+let pendingHref: string | null = null;
+let phase: Phase = null;
+let phaseTimer: number | undefined;
 
 /** Layout viewport the fixed overlay actually covers. `clientWidth/Height`
  *  excludes any scrollbar gutter, matching a `position: fixed; inset: 0`
@@ -27,7 +40,7 @@ function stripAt(pos: number, g: StripGeometry): { x: number; y: number } {
 }
 
 /** Set CSS custom properties on each strip for the CSS-driven enter/exit
- *  animations. No GSAP — all motion is GPU-accelerated CSS keyframes. */
+ *  animations. All motion is GPU-accelerated CSS keyframes (no GSAP). */
 function setStripGeometry(strips: HTMLElement[], geom: StripGeometry[]): void {
   geom.forEach((g, i) => {
     const enter = stripAt(g.enterStart, g);
@@ -47,99 +60,152 @@ function setStripGeometry(strips: HTMLElement[], geom: StripGeometry[]): void {
   });
 }
 
-let exitTimeout: number | undefined;
-
-function hideOverlay(overlay: HTMLElement): void {
-  overlay.style.visibility = 'hidden';
-  overlay.hidden = true;
-  delete overlay.dataset.phase;
-  if (exitTimeout !== undefined) {
-    window.clearTimeout(exitTimeout);
-    exitTimeout = undefined;
+function clearPhaseTimer(): void {
+  if (phaseTimer !== undefined) {
+    window.clearTimeout(phaseTimer);
+    phaseTimer = undefined;
   }
 }
 
+function hideOverlay(): void {
+  const overlay = document.getElementById('blinds-overlay');
+  if (overlay) {
+    overlay.style.visibility = 'hidden';
+    overlay.hidden = true;
+    delete overlay.dataset.phase;
+  }
+  clearPhaseTimer();
+  phase = null;
+  blindsActive = false;
+  pendingHref = null;
+}
+
+function startEntry(href: string): void {
+  const overlay = document.getElementById('blinds-overlay');
+  if (!overlay) {
+    navigate(href);
+    return;
+  }
+  const strips = Array.from(
+    overlay.querySelectorAll<HTMLElement>('.blinds-strip')
+  );
+  if (!strips.length) {
+    navigate(href);
+    return;
+  }
+
+  clearPhaseTimer();
+  setStripGeometry(strips, computeGeometry(viewport()));
+  overlay.style.setProperty('--strip-duration', `${PER_STRIP}s`);
+  overlay.hidden = false;
+  overlay.style.visibility = 'visible';
+  overlay.dataset.phase = 'enter';
+  phase = 'enter';
+  blindsActive = true;
+  pendingHref = href;
+
+  // Navigate after the entry animation completes. navigate() triggers
+  // before-swap (skipVT) → instant swap under cover → page-load (startExit).
+  phaseTimer = window.setTimeout(() => {
+    if (phase !== 'enter') return;
+    const h = pendingHref;
+    pendingHref = null;
+    if (h) {
+      navigate(h).catch(() => hideOverlay());
+    }
+  }, ENTRY_DURATION * 1000);
+}
+
+function startExit(): void {
+  const overlay = document.getElementById('blinds-overlay');
+  if (!overlay) {
+    hideOverlay();
+    return;
+  }
+  overlay.dataset.phase = 'exit';
+  phase = 'exit';
+  const exitTotal = (STRIP_COUNT - 1) * EXIT_STAGGER + PER_STRIP + 0.15;
+  phaseTimer = window.setTimeout(() => hideOverlay(), exitTotal * 1000);
+}
+
 /**
- * Rainbow blinds route transition (CSS-driven). Entry plays during the VT
- * (old page held visible behind strips via static VT pseudos). The DOM swaps
- * normally — we do NOT defer event.swap. Exit plays on astro:page-load AFTER
- * the VT ends, so the new page (live DOM) is visible behind the exiting strips.
+ * Rainbow blinds route transition (CSS-driven, VT skipped).
+ *
+ * 1. Intercept internal link clicks (capture phase, before ClientRouter).
+ * 2. Play the CSS entry animation on the live DOM (old page visible).
+ * 3. On entry complete, call navigate() — Astro fetches + swaps instantly
+ *    (the View Transition is skipped so the live DOM stays visible).
+ * 4. On astro:page-load (swap done), play the CSS exit animation (new page
+ *    visible behind the exiting strips).
  */
 export function runBlindsTransition(): void {
   const w = window as unknown as { __kogaBlindsBound?: boolean };
   if (w.__kogaBlindsBound) return;
   w.__kogaBlindsBound = true;
 
-  // Set the VT hold duration so the old-page pseudo stays visible for the
-  // entire entry phase. Read by transitions.css (::view-transition-old).
-  document.documentElement.style.setProperty(
-    '--blinds-vt-duration',
-    `${ENTRY_DURATION}s`
-  );
-
   const reduce = (): boolean =>
     window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  // 1. START ENTRY — strips slide in sequentially, covering the old page.
-  //    The VT old-page pseudo is held visible (static) behind the strips.
-  //    We don't touch event.swap — Astro swaps whenever it wants.
-  document.addEventListener('astro:before-swap', () => {
-    if (reduce()) return;
-    if (document.documentElement.classList.contains('intro-active')) return;
+  // 1. Intercept internal link clicks — CAPTURE phase so this runs before
+  //    ClientRouter's bubble-phase listener. preventDefault() makes
+  //    ClientRouter bail (it checks ev.defaultPrevented).
+  document.addEventListener(
+    'click',
+    (ev: MouseEvent) => {
+      if (reduce()) return;
+      if (document.documentElement.classList.contains('intro-active')) return;
+      if (ev.button !== 0 || ev.ctrlKey || ev.metaKey || ev.shiftKey || ev.altKey)
+        return;
 
-    const overlay = document.getElementById('blinds-overlay');
-    if (!overlay) return;
-    const strips = Array.from(
-      overlay.querySelectorAll<HTMLElement>('.blinds-strip')
-    );
-    if (!strips.length) return;
+      const target = (ev.composed ? ev.composedPath()[0] : ev.target) as
+        | Element
+        | null;
+      const anchor = target instanceof Element ? target.closest('a') : null;
+      if (!(anchor instanceof HTMLAnchorElement)) return;
+      if (anchor.target && anchor.target !== '_self') return;
+      if (anchor.hasAttribute('download')) return;
 
-    if (exitTimeout !== undefined) {
-      window.clearTimeout(exitTimeout);
-      exitTimeout = undefined;
+      const url = new URL(anchor.href, location.href);
+      if (url.origin !== location.origin) return;
+      if (url.pathname === location.pathname && url.search === location.search)
+        return;
+
+      ev.preventDefault();
+
+      // Entry in progress: just update the destination.
+      if (phase === 'enter') {
+        pendingHref = anchor.href;
+        return;
+      }
+      // Exit in progress: let it finish (ignore rapid re-click).
+      if (phase === 'exit') return;
+
+      startEntry(anchor.href);
+    },
+    true // CAPTURE
+  );
+
+  // 2. Skip the View Transition — instant swap under the blinds cover.
+  //    Without this, the VT would hide the live DOM (and the overlay).
+  document.addEventListener('astro:before-swap', (event) => {
+    if (!blindsActive) return;
+    const evt = event as unknown as { viewTransition: ViewTransition };
+    try {
+      evt.viewTransition.skipTransition();
+    } catch {
+      // ignore — some browsers may not support skipTransition
     }
-
-    const geom = computeGeometry(viewport());
-    setStripGeometry(strips, geom);
-    overlay.style.setProperty('--strip-duration', `${PER_STRIP}s`);
-
-    overlay.hidden = false;
-    overlay.style.visibility = 'visible';
-    overlay.dataset.phase = 'enter';
   });
 
-  // 2. START EXIT — after the VT ends, the new page (live DOM) is visible.
-  //    Strips cascade out in a wave, revealing the new page.
+  // 3. Start exit after the swap completes (new page is now the live DOM).
   document.addEventListener('astro:page-load', () => {
-    const overlay = document.getElementById('blinds-overlay');
-    if (!overlay || overlay.hidden || overlay.dataset.phase !== 'enter') return;
-
-    const lastStrip =
-      overlay.querySelector<HTMLElement>('.blinds-strip:last-child');
-
-    const onEnd = (e: AnimationEvent): void => {
-      if (e.animationName !== 'blinds-exit') return;
-      lastStrip?.removeEventListener('animationend', onEnd);
-      hideOverlay(overlay);
-    };
-    lastStrip?.addEventListener('animationend', onEnd);
-
-    overlay.dataset.phase = 'exit';
-
-    // Failsafe in case animationend doesn't fire.
-    const exitTotal = (STRIP_COUNT - 1) * EXIT_STAGGER + PER_STRIP + 0.2;
-    exitTimeout = window.setTimeout(() => {
-      lastStrip?.removeEventListener('animationend', onEnd);
-      hideOverlay(overlay);
-    }, exitTotal * 1000);
+    if (!blindsActive || phase !== 'enter') return;
+    startExit();
   });
 
-  // 3. FAILSAFE — never leave the overlay stuck open.
+  // 4. Failsafe — if page-load didn't fire, force exit on after-swap.
   document.addEventListener('astro:after-swap', () => {
-    const overlay = document.getElementById('blinds-overlay');
-    if (!overlay || overlay.hidden) return;
-    exitTimeout = window.setTimeout(() => {
-      if (!overlay.hidden) hideOverlay(overlay);
-    }, 4000);
+    if (!blindsActive) return;
+    if (phase === 'enter') startExit();
   });
 }

@@ -1,9 +1,11 @@
 /* ============================================================
-   Rainbow blinds route transitions (CSS-driven)
-   Entry: strips slide in during the VT; the old-page pseudo is
-   held visible (static) behind them. The DOM swaps normally.
-   Exit: after the VT ends, the live DOM (new page) is visible
-   behind the strips as they cascade out.
+   Rainbow blinds route transitions (CSS-driven, VT skipped)
+   The blinds overlay (BlindsTransition.astro) is the sole visual
+   for click navigation. The native View Transition is skipped via
+   viewTransition.skipTransition() in blindsTransition.ts so the live
+   DOM (and the overlay) stay visible throughout. These rules only
+   apply for reduced-motion (where blinds are disabled) or as a
+   safety net if the VT runs unexpectedly.
    ============================================================ */
 
 :root {
@@ -14,37 +16,20 @@ body {
   perspective: 1400px;
 }
 
-/* Hold old-page pseudos visible (opacity 1, static) for the entry duration
-   so the strips cover the old page. New-page pseudos are hidden (opacity 0);
-   when the VT ends, the pseudos are removed and the live DOM (new page) is
-   revealed behind the exit strips. --blinds-vt-duration is set from JS to
-   match the total entry time (9 × PER_STRIP). */
+/* Safety net: if the VT runs (JS didn't skip it), neutralize the old 3D
+   animation so there's no ugly rotateY. The old page shows statically. */
 ::view-transition-old(root),
-::view-transition-old(content) {
-  animation: vt-hold var(--blinds-vt-duration, 0.9s) ease both;
-}
-
 ::view-transition-new(root),
+::view-transition-old(content),
 ::view-transition-new(content) {
   animation: none;
-  opacity: 0;
-}
-
-@keyframes vt-hold {
-  from,
-  to {
-    opacity: 1;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  /* Simple opacity crossfade; the blinds overlay stays hidden (JS early-return
-     + the component's #blinds-overlay { display: none !important } guard). */
-  ::view-transition-old(root),
+  /* Simple opacity crossfade for reduced motion (blinds disabled). */
   ::view-transition-old(content) {
     animation: koga-fade-out 0.25s ease both;
   }
-  ::view-transition-new(root),
   ::view-transition-new(content) {
     animation: koga-fade-in 0.25s ease both;
   }
